@@ -64,26 +64,57 @@
 </head>
 <body>
   <header>
-    <img src="/desktop/flags/USAFlag.png" alt="Flag Icon" />
+    <img src="FlagIcons/USAFlag.png" alt="Flag Icon" />
     Flag
   </header>
 
   <main>
     <div class="flag-container">
       <div class="flag-pole">
-        <img
-          <img src="Flag Icons/USAFlag.png" alt="US Flag" class="flag-img"
-        />
+        <img id="us-flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
       </div>
       <div class="flag-pole">
-        <img
-          <img src="Flag Icons/VAFlag.png" alt="US Flag" class="flag-img"
-        />
+        <img id="state-flag" src="FlagIcons/VAFlag.png" alt="Virginia Flag" class="flag-img" />
       </div>
     </div>
-    <footer>
-      There are currently <em>no</em> half-mast orders
+    <footer id="statusText">
+      There are currently <em>no</em> half-mast orders.
     </footer>
   </main>
+
+  <script>
+    async function loadFlagStatus() {
+      try {
+        const res = await fetch('/.netlify/functions/getFlagStatus?state=VA');
+        const data = await res.json();
+
+        const national = data.find(r => r.state_code === null);
+        const state = data.find(r => r.state_code === 'VA');
+
+        const usHalf = national?.half_mast;
+        const stateHalf = state?.half_mast;
+
+        const usImg = document.getElementById('us-flag');
+        const stateImg = document.getElementById('state-flag');
+        const footer = document.getElementById('statusText');
+
+        // Update flag images
+        usImg.src = usHalf ? 'FlagIcons/USAFlag_Half.png' : 'FlagIcons/USAFlag.png';
+        stateImg.src = stateHalf ? 'FlagIcons/VAFlag_Half.png' : 'FlagIcons/VAFlag.png';
+
+        // Update text
+        if (usHalf || stateHalf) {
+          const reason = state?.reason || national?.reason || "an active proclamation";
+          footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
+        } else {
+          footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
+        }
+      } catch (err) {
+        console.error("Error loading flag status:", err);
+      }
+    }
+
+    loadFlagStatus();
+  </script>
 </body>
 </html>
