@@ -11,10 +11,12 @@ function stripHtml(html) {
     .trim();
 }
 
-/** State detection */
 function detectState(subject) {
   if (!subject) return null;
 
+  const upper = subject.toUpperCase();
+
+  // Full name → abbreviation map
   const stateMap = {
     "ALABAMA": "AL", "ALASKA": "AK", "ARIZONA": "AZ", "ARKANSAS": "AR",
     "CALIFORNIA": "CA", "COLORADO": "CO", "CONNECTICUT": "CT", "DELAWARE": "DE",
@@ -23,22 +25,33 @@ function detectState(subject) {
     "KANSAS": "KS", "KENTUCKY": "KY", "LOUISIANA": "LA", "MAINE": "ME",
     "MARYLAND": "MD", "MASSACHUSETTS": "MA", "MICHIGAN": "MI", "MINNESOTA": "MN",
     "MISSISSIPPI": "MS", "MISSOURI": "MO", "MONTANA": "MT", "NEBRASKA": "NE",
-    "NEVADA": "NV", "NEW HAMPSHIRE": "NH", "NEW JERSEY": "NJ",
-    "NEW MEXICO": "NM", "NEW YORK": "NY", "NORTH CAROLINA": "NC",
-    "NORTH DAKOTA": "ND", "OHIO": "OH", "OKLAHOMA": "OK", "OREGON": "OR",
-    "PENNSYLVANIA": "PA", "RHODE ISLAND": "RI", "SOUTH CAROLINA": "SC",
-    "SOUTH DAKOTA": "SD", "TENNESSEE": "TN", "TEXAS": "TX", "UTAH": "UT",
-    "VERMONT": "VT", "VIRGINIA": "VA", "WASHINGTON": "WA",
-    "WEST VIRGINIA": "WV", "WISCONSIN": "WI", "WYOMING": "WY",
-    "DISTRICT OF COLUMBIA": "DC", "WASHINGTON DC": "DC"
+    "NEVADA": "NV", "NEW HAMPSHIRE": "NH", "NEW JERSEY": "NJ", "NEW MEXICO": "NM",
+    "NEW YORK": "NY", "NORTH CAROLINA": "NC", "NORTH DAKOTA": "ND",
+    "OHIO": "OH", "OKLAHOMA": "OK", "OREGON": "OR", "PENNSYLVANIA": "PA",
+    "RHODE ISLAND": "RI", "SOUTH CAROLINA": "SC", "SOUTH DAKOTA": "SD",
+    "TENNESSEE": "TN", "TEXAS": "TX", "UTAH": "UT", "VERMONT": "VT",
+    "VIRGINIA": "VA", "WASHINGTON": "WA", "WEST VIRGINIA": "WV",
+    "WISCONSIN": "WI", "WYOMING": "WY", "WASHINGTON DC": "DC",
+    "DISTRICT OF COLUMBIA": "DC"
   };
 
-  const upper = subject.toUpperCase();
-  for (const name in stateMap) {
-    if (upper.includes(name)) return stateMap[name];
+  // Check full names first
+  for (const fullName in stateMap) {
+    if (upper.includes(fullName)) return stateMap[fullName];
   }
+
+  // Check abbreviations (MA, VA, TX…)
+  for (const code of Object.values(stateMap)) {
+    // Word boundary ensures MA doesn't match "EMAIL"
+    const regex = new RegExp(`\\b${code}\\b`);
+    if (regex.test(upper)) {
+      return code;
+    }
+  }
+
   return null;
 }
+
 
 /** National detection */
 function detectNational(subject) {
