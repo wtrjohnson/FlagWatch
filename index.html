@@ -83,38 +83,62 @@
   </main>
 
   <script>
-    async function loadFlagStatus() {
-      try {
-        const res = await fetch('/.netlify/functions/getFlagStatus?state=VA');
-        const data = await res.json();
-
-        const national = data.find(r => r.state_code === null);
-        const state = data.find(r => r.state_code === 'VA');
-
-        const usHalf = national?.half_mast;
-        const stateHalf = state?.half_mast;
-
-        const usImg = document.getElementById('us-flag');
-        const stateImg = document.getElementById('state-flag');
-        const footer = document.getElementById('statusText');
-
-        // Update flag images
-        usImg.src = usHalf ? 'FlagIcons/USAHalf.png' : 'FlagIcons/USAFlag.png';
-        stateImg.src = stateHalf ? 'FlagIcons/VAFlag_Half.png' : 'FlagIcons/VAFlag.png';
-
-        // Update text
-        if (usHalf || stateHalf) {
-          const reason = state?.reason || national?.reason || "an active proclamation";
-          footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
-        } else {
-          footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
-        }
-      } catch (err) {
-        console.error("Error loading flag status:", err);
-      }
+  async function detectUserState() {
+    try {
+      const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
+      const data = await res.json();
+      return data.region_code || null; // e.g., "VA"
+    } catch (e) {
+      console.error("IP lookup failed:", e);
+      return null;
     }
+  }
 
-    loadFlagStatus();
-  </script>
+  async function loadFlagStatus() {
+    try {
+      // 1. Detect state automatically
+      const userState = await detectUserState();
+      const state = userState || "US"; // fallback if detection fails
+
+      // 2. Fetch DB results for that state
+      const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
+      const data = await res.json();
+
+      // 3. Identify national + state rows
+      const national = data.find(r => r.state_code === null);
+      const stateRow = data.find(r => r.state_code === state);
+
+      const usHalf = national?.half_mast;
+      const stateHalf = stateRow?.half_mast;
+
+      // 4. DOM elements
+      const usImg = document.getElementById('us-flag');
+      const stateImg = document.getElementById('state-flag');
+      const footer = document.getElementById('statusText');
+
+      // 5. Update images
+      usImg.src = usHalf ? 'FlagIcons/USAHalf.png' : 'FlagIcons/USAFlag.png';
+
+      // dynamically load state flag
+      stateImg.src = stateHalf
+        ? `FlagIcons/${state}Flag_Half.png`
+        : `FlagIcons/${state}Flag.png`;
+
+      // 6. Update status text
+      if (usHalf || stateHalf) {
+        const reason = stateRow?.reason || national?.reason || "an active proclamation";
+        footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
+      } else {
+        footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
+      }
+
+    } catch (err) {
+      console.error("Error loading flag status:", err);
+    }
+  }
+
+  loadFlagStatus();
+</script>
+
 </body>
 </html>
