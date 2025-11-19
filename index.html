@@ -91,13 +91,13 @@
 <main>
   <div class="flag-container">
     <div class="flag-pole">
-      <!-- The flagpole stays stationary -->
-      <img id="us-pole" src="FlagIcons/USFlagPole.png" alt="U.S. Flagpole" class="flag-pole-img" />
+      <!-- The flagpole is the same for all states, so we use a single image -->
+      <img id="us-pole" src="FlagIcons/FlagPole.png" alt="U.S. Flagpole" class="flag-pole-img" />
       <img id="us-flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
     </div>
     <div class="flag-pole">
       <!-- Virginia flagpole -->
-      <img id="state-pole" src="FlagIcons/VAFlagPole.png" alt="Virginia Flagpole" class="flag-pole-img" />
+      <img id="state-pole" src="FlagIcons/FlagPole.png" alt="State Flagpole" class="flag-pole-img" />
       <img id="state-flag" src="FlagIcons/VAFlag.png" alt="Virginia Flag" class="flag-img" />
     </div>
   </div>
@@ -105,6 +105,7 @@
     There are currently <em>no</em> half-mast orders.
   </footer>
 </main>
+
 
 
 
@@ -179,29 +180,13 @@ async function loadFlagStatus() {
     const stateImg = document.getElementById('state-flag');
     const footer = document.getElementById('statusText');
 
-    const usPole = document.getElementById('us-pole');
-    const statePole = document.getElementById('state-pole');
-
-    // 5. Update images
+    // 5. Update flag images
     usImg.src = usHalf ? 'FlagIcons/USAHalf.png' : 'FlagIcons/USAFlag.png';
     stateImg.src = stateHalf
       ? `FlagIcons/${state}Flag_Half.png`
       : `FlagIcons/${state}Flag.png`;
 
-    // 6. Apply animation class when half-mast
-    if (usHalf) {
-      usImg.classList.add('flag-lowered');
-    } else {
-      usImg.classList.remove('flag-lowered');
-    }
-
-    if (stateHalf) {
-      stateImg.classList.add('flag-lowered');
-    } else {
-      stateImg.classList.remove('flag-lowered');
-    }
-
-    // 7. Update status text
+    // 6. Update status text
     if (usHalf || stateHalf) {
       const reason = stateRow?.reason || national?.reason || "an active proclamation";
       footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
@@ -213,6 +198,7 @@ async function loadFlagStatus() {
     console.error("Error loading flag status:", err);
   }
 }
+
 
 
   loadFlagStatus();
