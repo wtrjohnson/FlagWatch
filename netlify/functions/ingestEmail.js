@@ -1,9 +1,7 @@
 // netlify/functions/ingestEmail.js
 import { neon } from "@neondatabase/serverless";
 
-/**
- * Utility: normalize text by stripping HTML tags if needed.
- */
+/** Utility: strip HTML */
 function stripHtml(html) {
   if (!html) return "";
   return html
@@ -13,13 +11,10 @@ function stripHtml(html) {
     .trim();
 }
 
-/**
- * Utility: extract state code from subject line
- */
+/** State detection */
 function detectState(subject) {
   if (!subject) return null;
 
-  // Map of all 50 states + DC
   const stateMap = {
     "ALABAMA": "AL", "ALASKA": "AK", "ARIZONA": "AZ", "ARKANSAS": "AR",
     "CALIFORNIA": "CA", "COLORADO": "CO", "CONNECTICUT": "CT", "DELAWARE": "DE",
@@ -28,206 +23,144 @@ function detectState(subject) {
     "KANSAS": "KS", "KENTUCKY": "KY", "LOUISIANA": "LA", "MAINE": "ME",
     "MARYLAND": "MD", "MASSACHUSETTS": "MA", "MICHIGAN": "MI", "MINNESOTA": "MN",
     "MISSISSIPPI": "MS", "MISSOURI": "MO", "MONTANA": "MT", "NEBRASKA": "NE",
-    "NEVADA": "NV", "NEW HAMPSHIRE": "NH", "NEW JERSEY": "NJ", "NEW MEXICO": "NM",
-    "NEW YORK": "NY", "NORTH CAROLINA": "NC", "NORTH DAKOTA": "ND", "OHIO": "OH",
-    "OKLAHOMA": "OK", "OREGON": "OR", "PENNSYLVANIA": "PA", "RHODE ISLAND": "RI",
-    "SOUTH CAROLINA": "SC", "SOUTH DAKOTA": "SD", "TENNESSEE": "TN", "TEXAS": "TX",
-    "UTAH": "UT", "VERMONT": "VT", "VIRGINIA": "VA", "WASHINGTON": "WA",
+    "NEVADA": "NV", "NEW HAMPSHIRE": "NH", "NEW JERSEY": "NJ",
+    "NEW MEXICO": "NM", "NEW YORK": "NY", "NORTH CAROLINA": "NC",
+    "NORTH DAKOTA": "ND", "OHIO": "OH", "OKLAHOMA": "OK", "OREGON": "OR",
+    "PENNSYLVANIA": "PA", "RHODE ISLAND": "RI", "SOUTH CAROLINA": "SC",
+    "SOUTH DAKOTA": "SD", "TENNESSEE": "TN", "TEXAS": "TX", "UTAH": "UT",
+    "VERMONT": "VT", "VIRGINIA": "VA", "WASHINGTON": "WA",
     "WEST VIRGINIA": "WV", "WISCONSIN": "WI", "WYOMING": "WY",
     "DISTRICT OF COLUMBIA": "DC", "WASHINGTON DC": "DC"
   };
 
   const upper = subject.toUpperCase();
-  for (const stateName in stateMap) {
-    if (upper.includes(stateName)) {
-      return stateMap[stateName];
-    }
+  for (const name in stateMap) {
+    if (upper.includes(name)) return stateMap[name];
   }
   return null;
 }
 
-/**
- * Detect if this is a national half-staff alert
- */
+/** National detection */
 function detectNational(subject) {
   if (!subject) return false;
   const s = subject.toUpperCase();
-
   return (
-    s.includes("U.S.") ||
     s.includes("UNITED STATES") ||
     s.includes("NATIONWIDE") ||
     s.includes("ALL U.S.") ||
     s.includes("US FLAGS") ||
-    s.includes("U. S. FLAG") ||
-    s.includes("U S FLAG")
+    s.includes("U.S. FLAGS")
   );
 }
 
-/**
- * Extract reason ("in honor of ___")
- */
+/** Extract reason */
 function extractReason(text) {
   if (!text) return null;
-
-  const match = text.match(/in honor of ([^.,\n]+)/i);
-  if (match) return match[1].trim();
-
-  // Fallback: pick the first person-like phrase
-  const m2 = text.match(/(Governor|President).+?(?:for|in honor of)\s+([^.,\n]+)/i);
-  if (m2) return m2[2].trim();
-
-  return null;
+  const m = text.match(/in honor of ([^.,\n]+)/i);
+  return m ? m[1].trim() : null;
 }
 
-/**
- * Extract dates (simple version)
- */
+/** Extract dates */
 function extractDates(text) {
   if (!text) return { start: null, end: null };
+  const regex = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}/gi;
+  const matches = [...text.matchAll(regex)];
 
-  const dateRegex = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}/gi;
-  const matches = [...text.matchAll(dateRegex)];
-
-  if (matches.length >= 2) {
-    return {
-      start: matches[0][0],
-      end: matches[1][0]
-    };
-  }
-
-  if (matches.length === 1) {
-    return {
-      start: matches[0][0],
-      end: null
-    };
-  }
-
-  return { start: null, end: null };
+  return {
+    start: matches[0]?.[0] || null,
+    end: matches[1]?.[0] || null
+  };
 }
 
-
-/**
- * MAIN HANDLER — CloudMailin → Neon DB
- */
-export async function handler(event, context) {
+/** MAIN HANDLER */
+export async function handler(event) {
   console.log("=== ingestEmail START ===");
 
-  // Try to parse JSON body
-let payload;
-try {
-  payload = JSON.parse(event.body);
-  console.log("Parsed JSON OK");
-} catch (err) {
-  console.log("JSON parse failed, body was not JSON");
-  console.log("Raw body shows:", event.body.substring(0, 500));
-  return { statusCode: 400, body: "Invalid JSON" };
-}
+  let payload = null;
 
-
+  /** Try JSON first (CloudMailin sends JSON unless you choose MIME passthrough) */
   try {
-    const sql = neon(process.env.NETLIFY_DATABASE_URL);
-
-    // CloudMailin sends multipart-normalized, so the body is form-encoded key=value
-    const contentType = event.headers["content-type"] || "";
-    const isMultipart = contentType.includes("multipart");
-
-    let body = "";
-
-    if (isMultipart) {
-      // Netlify parses form-encoded multipart into "body" as raw
-      // We must let Netlify parse it into event.body normally
-      // Netlify gives event.body as base64 when binary, so decode conditionally
-      if (event.isBase64Encoded) {
-        body = Buffer.from(event.body, "base64").toString("utf-8");
-      } else {
-        body = event.body;
-      }
-    } else {
-      body = event.body;
-    }
-
-    // CloudMailin normalized multipart sends fields like: plain=...&html=...&headers[subject]=...
-    const params = new URLSearchParams(body);
-
-    const html = params.get("html");
-    const plain = params.get("plain");
-
-    const subject = params.get("headers[subject]") || params.get("subject");
-    const from = params.get("headers[from]");
-
-    console.log("Raw body keys:", [...params.keys()]);
-    console.log("Subject:", subject);
-    console.log("From:", from);
-
-    // Combine HTML → fallback to plain
-    const emailText = html ? stripHtml(html) : (plain || "");
-    console.log("Extracted text:", emailText.slice(0, 200), "...");
-
-    // Detect national vs state
-    const isNational = detectNational(subject);
-    const stateCode = isNational ? null : detectState(subject);
-
-    console.log("Detected State:", stateCode);
-    console.log("National Alert?", isNational);
-
-    if (!isNational && !stateCode) {
-      console.log("No recognizable state → ignoring email.");
-      return { statusCode: 200, body: "Ignored" };
-    }
-
-    // Parse reason + dates
-    const reason = extractReason(emailText);
-    const { start, end } = extractDates(emailText);
-
-    console.log("Reason:", reason);
-    console.log("Start date:", start, "End date:", end);
-
-    // Overwrite logic
-    if (isNational) {
-      console.log("Updating NATIONAL half-staff order...");
-
-      await sql`
-        INSERT INTO flag_status (country_code, state_code, half_mast, reason, start_date, end_date, raw_email)
-        VALUES ('US', NULL, true, ${reason}, ${start}, ${end}, ${emailText})
-        ON CONFLICT (country_code, state_code)
-        DO UPDATE SET
-          half_mast = EXCLUDED.half_mast,
-          reason = EXCLUDED.reason,
-          start_date = EXCLUDED.start_date,
-          end_date = EXCLUDED.end_date,
-          raw_email = EXCLUDED.raw_email,
-          updated_at = NOW();
-      `;
-
-    } else {
-      console.log(`Updating state ${stateCode} half-staff order...`);
-
-      await sql`
-        INSERT INTO flag_status (country_code, state_code, half_mast, reason, start_date, end_date, raw_email)
-        VALUES ('US', ${stateCode}, true, ${reason}, ${start}, ${end}, ${emailText})
-        ON CONFLICT (country_code, state_code)
-        DO UPDATE SET
-          half_mast = EXCLUDED.half_mast,
-          reason = EXCLUDED.reason,
-          start_date = EXCLUDED.start_date,
-          end_date = EXCLUDED.end_date,
-          raw_email = EXCLUDED.raw_email,
-          updated_at = NOW();
-      `;
-    }
-
-    console.log("=== ingestEmail SUCCESS ===");
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ status: "ok" })
-    };
-
-  } catch (err) {
-    console.error("INGEST ERROR:", err);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: err.message })
-    };
+    payload = JSON.parse(event.body);
+    console.log("CloudMailin JSON detected");
+  } catch {
+    console.log("Not JSON; checking for multipart/form-data");
   }
+
+  let subject = null;
+  let from = null;
+  let html = null;
+  let plain = null;
+
+  if (payload && typeof payload === "object" && payload.headers) {
+    // ---- CLOUDMAILIN JSON ----
+    subject = payload.headers.subject || null;
+    from = payload.headers.from || null;
+    html = payload.html || null;
+    plain = payload.plain || null;
+  } else {
+    // ---- MULTIPART FALLBACK ----
+    const params = new URLSearchParams(event.body);
+    subject = params.get("headers[subject]") || params.get("subject");
+    from = params.get("headers[from]");
+    html = params.get("html");
+    plain = params.get("plain");
+  }
+
+  console.log("Subject:", subject);
+  console.log("From:", from);
+
+  if (!subject) {
+    console.log("Could not extract subject → ignoring email.");
+    return { statusCode: 200, body: "ignored" };
+  }
+
+  const emailText = html ? stripHtml(html) : (plain || "");
+  console.log("Extracted text:", emailText.slice(0, 200), "...");
+
+  const isNational = detectNational(subject);
+  const stateCode = isNational ? null : detectState(subject);
+
+  console.log("Detected state:", stateCode);
+  console.log("National:", isNational);
+
+  if (!isNational && !stateCode) {
+    console.log("No state detected → ignoring");
+    return { statusCode: 200, body: "ignored" };
+  }
+
+  const reason = extractReason(emailText);
+  const { start, end } = extractDates(emailText);
+
+  const sql = neon(process.env.NETLIFY_DATABASE_URL);
+
+  if (isNational) {
+    await sql`
+      INSERT INTO flag_status (country_code, state_code, half_mast, reason, start_date, end_date, raw_email)
+      VALUES ('US', NULL, true, ${reason}, ${start}, ${end}, ${emailText})
+      ON CONFLICT (country_code, state_code)
+      DO UPDATE SET
+        half_mast = EXCLUDED.half_mast,
+        reason = EXCLUDED.reason,
+        start_date = EXCLUDED.start_date,
+        end_date = EXCLUDED.end_date,
+        raw_email = EXCLUDED.raw_email,
+        updated_at = NOW();
+    `;
+  } else {
+    await sql`
+      INSERT INTO flag_status (country_code, state_code, half_mast, reason, start_date, end_date, raw_email)
+      VALUES ('US', ${stateCode}, true, ${reason}, ${start}, ${end}, ${emailText})
+      ON CONFLICT (country_code, state_code)
+      DO UPDATE SET
+        half_mast = EXCLUDED.half_mast,
+        reason = EXCLUDED.reason,
+        start_date = EXCLUDED.start_date,
+        end_date = EXCLUDED.end_date,
+        raw_email = EXCLUDED.raw_email,
+        updated_at = NOW();
+    `;
+  }
+
+  console.log("=== SUCCESS ===");
+  return { statusCode: 200, body: "ok" };
 }
