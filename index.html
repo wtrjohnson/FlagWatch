@@ -98,7 +98,8 @@
     try {
       // 1. Detect state automatically
       const userState = await detectUserState();
-      const state = userState || "US"; // fallback if detection fails
+      const state = (userState || "US").toUpperCase();
+
 
       // 2. Fetch DB results for that state
       const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
