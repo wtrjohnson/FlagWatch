@@ -84,15 +84,47 @@
 
   <script>
   async function detectUserState() {
-    try {
-      const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
-      const data = await res.json();
-      return data.region_code || null; // e.g., "VA"
-    } catch (e) {
-      console.error("IP lookup failed:", e);
-      return null;
+  try {
+    const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
+    const data = await res.json();
+
+    // ipinfo sometimes gives:
+    // region: "Virginia"
+    // region_code: undefined
+
+    // First try region_code
+    if (data.region_code) {
+      return data.region_code.toUpperCase();
     }
+
+    // Fallback: map full state name → abbreviation
+    const stateMap = {
+      "ALABAMA":"AL","ALASKA":"AK","ARIZONA":"AZ","ARKANSAS":"AR",
+      "CALIFORNIA":"CA","COLORADO":"CO","CONNECTICUT":"CT","DELAWARE":"DE",
+      "FLORIDA":"FL","GEORGIA":"GA","HAWAII":"HI","IDAHO":"ID","ILLINOIS":"IL",
+      "INDIANA":"IN","IOWA":"IA","KANSAS":"KS","KENTUCKY":"KY","LOUISIANA":"LA",
+      "MAINE":"ME","MARYLAND":"MD","MASSACHUSETTS":"MA","MICHIGAN":"MI",
+      "MINNESOTA":"MN","MISSISSIPPI":"MS","MISSOURI":"MO","MONTANA":"MT",
+      "NEBRASKA":"NE","NEVADA":"NV","NEW HAMPSHIRE":"NH","NEW JERSEY":"NJ",
+      "NEW MEXICO":"NM","NEW YORK":"NY","NORTH CAROLINA":"NC","NORTH DAKOTA":"ND",
+      "OHIO":"OH","OKLAHOMA":"OK","OREGON":"OR","PENNSYLVANIA":"PA",
+      "RHODE ISLAND":"RI","SOUTH CAROLINA":"SC","SOUTH DAKOTA":"SD",
+      "TENNESSEE":"TN","TEXAS":"TX","UTAH":"UT","VERMONT":"VT","VIRGINIA":"VA",
+      "WASHINGTON":"WA","WEST VIRGINIA":"WV","WISCONSIN":"WI","WYOMING":"WY"
+    };
+
+    const region = (data.region || "").toUpperCase();
+    if (stateMap[region]) {
+      return stateMap[region];
+    }
+
+    return null;
+  } catch (e) {
+    console.error("IP lookup failed:", e);
+    return null;
   }
+}
+
 
   async function loadFlagStatus() {
     try {
