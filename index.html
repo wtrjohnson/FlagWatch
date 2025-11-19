@@ -107,7 +107,8 @@
 
       // 3. Identify national + state rows
       const national = data.find(r => r.state_code === null);
-      const stateRow = data.find(r => r.state_code === state);
+      const stateRow = data.find(r => (r.state_code || "").toUpperCase() === state);
+
 
       const usHalf = national?.half_mast;
       const stateHalf = stateRow?.half_mast;
