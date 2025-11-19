@@ -113,6 +113,18 @@ function extractDates(text) {
 export async function handler(event, context) {
   console.log("=== ingestEmail START ===");
 
+  // Try to parse JSON body
+let payload;
+try {
+  payload = JSON.parse(event.body);
+  console.log("Parsed JSON OK");
+} catch (err) {
+  console.log("JSON parse failed, body was not JSON");
+  console.log("Raw body shows:", event.body.substring(0, 500));
+  return { statusCode: 400, body: "Invalid JSON" };
+}
+
+
   try {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
 
