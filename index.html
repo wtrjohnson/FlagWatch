@@ -41,15 +41,30 @@
     }
 
     .flag-pole {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+  position: relative;
+  width: 200px;
+  height: 350px;  /* your pole height */
+  display: flex;
+  justify-content: center;
+}
 
-    .flag-img {
-      width: 180px;
-      height: auto;
-    }
+.flag-wrapper {
+  position: absolute;
+  top: 0;                /* Start at top = full-mast */
+  transition: top 2.2s ease-in-out;
+}
+
+/* When half-mast, push down 50% */
+.half-mast {
+  top: 50%;
+}
+
+
+.flag-img {
+  max-height: 100%;
+  object-fit: contain;
+}
+
 
     footer {
       font-size: 1.4rem;
@@ -68,19 +83,21 @@
     Flag
   </header>
 
-  <main>
-    <div class="flag-container">
-      <div class="flag-pole">
-        <img id="us-flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
-      </div>
-      <div class="flag-pole">
-        <img id="state-flag" src="FlagIcons/VAFlag.png" alt="Virginia Flag" class="flag-img" />
-      </div>
+<div class="flag-container">
+  <div class="flag-pole">
+    <div class="flag-wrapper">
+      <img id="us-flag" src="FlagIcons/USAFlag.png" class="flag-img" />
     </div>
-    <footer id="statusText">
-      There are currently <em>no</em> half-mast orders.
-    </footer>
-  </main>
+  </div>
+
+  <div class="flag-pole">
+    <div class="flag-wrapper">
+      <img id="state-flag" src="FlagIcons/VAFlag.png" class="flag-img" />
+    </div>
+  </div>
+</div>
+
+
 
   <script>
   async function detectUserState() {
@@ -154,21 +171,34 @@
       const stateImg = document.getElementById('state-flag');
       const footer = document.getElementById('statusText');
 
-      // 5. Update images
-      usImg.src = usHalf ? 'FlagIcons/USAHalf.png' : 'FlagIcons/USAFlag.png';
+// ===== US FLAG =====
+usImg.src = usHalf ? "FlagIcons/USAHalf.png" : "FlagIcons/USAFlag.png";
+usImg.classList.toggle("half-mast", usHalf);
 
-      // dynamically load state flag
-      stateImg.src = stateHalf
-        ? `FlagIcons/${state}Flag_Half.png`
-        : `FlagIcons/${state}Flag.png`;
+// ===== STATE FLAG =====
+stateImg.src = stateHalf
+  ? `FlagIcons/${state}Flag_Half.png`
+  : `FlagIcons/${state}Flag.png`;
+stateImg.classList.toggle("half-mast", stateHalf);
 
-      // 6. Update status text
-      if (usHalf || stateHalf) {
-        const reason = stateRow?.reason || national?.reason || "an active proclamation";
-        footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
-      } else {
-        footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
-      }
+
+     // 6. Update status text
+if (usHalf || stateHalf) {
+
+  const reason = stateRow?.reason || national?.reason || "an active proclamation";
+
+  if (stateHalf && !usHalf) {
+    footer.textContent = `${state} flags are at half-mast in honor of ${reason}.`;
+  } else if (stateHalf && usHalf) {
+    footer.textContent = `U.S. and ${state} flags are at half-mast in honor of ${reason}.`;
+  } else if (usHalf) {
+    footer.textContent = `U.S. flags are at half-mast in honor of ${reason}.`;
+  }
+
+} else {
+  footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
+}
+
 
     } catch (err) {
       console.error("Error loading flag status:", err);
