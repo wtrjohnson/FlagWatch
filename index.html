@@ -36,36 +36,39 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      gap: 80px;
+      gap: 50px; /* Adjust spacing between poles */
       margin-bottom: 30px;
     }
 
     .flag-pole {
       position: relative;
-      width: 100px;      /* Fixed width for the pole */
-      height: 350px;     /* Fixed height for the pole */
+      width: 120px; /* Increased width of the pole */
+      height: 500px; /* Increased height of the pole */
       display: flex;
       justify-content: center;
       align-items: flex-start;
-      background-color: #8B8B8B;  /* Optional pole color */
-      border-radius: 10px;  /* Optional: rounded pole */
-      margin-top: 0;       /* Ensure the pole stays in place */
+      background-color: #8B8B8B; /* Optional pole color */
+      border-radius: 10px; /* Optional rounded pole */
     }
 
     .flag-wrapper {
       position: absolute;
-      top: 0;              /* Full mast starts at the top */
-      transition: top 2.2s ease-in-out;  /* Smooth transition for half-mast */
+      top: 0; /* Full mast starts at the top */
+      transition: top 2.2s ease-in-out; /* Smooth transition */
+      width: 100%;
+      display: flex;
+      justify-content: center; /* Centers the flag inside the pole */
     }
 
+    /* When half-mast, push down 50% */
     .half-mast {
-      top: 50%;            /* Move flag down to simulate half-mast */
+      top: 50%;
     }
 
     .flag-img {
-      width: 100%;         /* Ensures the flag image fits within the pole width */
+      width: 100%; /* Ensure flag fills the width of the pole */
       height: auto;
-      object-fit: contain; /* Maintains aspect ratio without distorting the image */
+      object-fit: contain;
     }
 
     footer {
@@ -82,21 +85,23 @@
 <body>
   <header>
     <img src="FlagIcons/USAFlag.png" alt="Flag Icon" />
-    Flag
+    Flag Status
   </header>
 
   <main>
     <div class="flag-container">
       <div class="flag-pole">
+        <!-- The flagpole is the same for all states, so we use a single image -->
         <img id="us-pole" src="FlagIcons/FlagPole.png" alt="U.S. Flagpole" class="flag-img" />
-        <div id="us-flag" class="flag-wrapper">
-          <img src="FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
+        <div class="flag-wrapper">
+          <img id="us-flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
         </div>
       </div>
       <div class="flag-pole">
+        <!-- Virginia flagpole -->
         <img id="state-pole" src="FlagIcons/FlagPole.png" alt="State Flagpole" class="flag-img" />
-        <div id="state-flag" class="flag-wrapper">
-          <img src="FlagIcons/VAFlag.png" alt="State Flag" class="flag-img" />
+        <div class="flag-wrapper">
+          <img id="state-flag" src="FlagIcons/VAFlag.png" alt="Virginia Flag" class="flag-img" />
         </div>
       </div>
     </div>
@@ -133,7 +138,7 @@
           "OHIO":"OH","OKLAHOMA":"OK","OREGON":"OR","PENNSYLVANIA":"PA",
           "RHODE ISLAND":"RI","SOUTH CAROLINA":"SC","SOUTH DAKOTA":"SD",
           "TENNESSEE":"TN","TEXAS":"TX","UTAH":"UT","VERMONT":"VT","VIRGINIA":"VA",
-          "WASHINGTON":"WA","WEST VIRGINIA":"WV","WISCONSIN":"WI","WYOMING":"WY", 
+          "WASHINGTON":"WA","WEST VIRGINIA":"WV","WISCONSIN":"WI","WYOMING":"WY",
           "DISTRICT OF COLUMBIA": "DC", "WASHINGTON DC": "DC", "WASHINGTON, D.C.": "DC",
           "WASHINGTON, DC": "DC", "DC": "DC", "D.C.": "DC"
         };
@@ -171,22 +176,15 @@
         const stateHalf = stateRow?.half_mast;
 
         // 4. DOM elements
-        const usFlag = document.getElementById('us-flag');
-        const stateFlag = document.getElementById('state-flag');
+        const usFlagWrapper = document.getElementById('us-flag');
+        const stateFlagWrapper = document.getElementById('state-flag');
         const footer = document.getElementById('statusText');
 
-        // 5. Update flag images and move to half-mast if needed
-        if (usHalf) {
-          usFlag.classList.add('half-mast');
-        } else {
-          usFlag.classList.remove('half-mast');
-        }
-
-        if (stateHalf) {
-          stateFlag.classList.add('half-mast');
-        } else {
-          stateFlag.classList.remove('half-mast');
-        }
+        // 5. Update flag images
+        usFlagWrapper.src = usHalf ? 'FlagIcons/USAHalf.png' : 'FlagIcons/USAFlag.png';
+        stateFlagWrapper.src = stateHalf
+          ? `FlagIcons/${state}Flag_Half.png`
+          : `FlagIcons/${state}Flag.png`;
 
         // 6. Update status text
         if (usHalf || stateHalf) {
@@ -195,6 +193,7 @@
         } else {
           footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
         }
+
       } catch (err) {
         console.error("Error loading flag status:", err);
       }
