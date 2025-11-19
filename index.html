@@ -100,6 +100,10 @@
       const userState = await detectUserState();
       const state = (userState || "US").toUpperCase();
 
+      console.log("Detected browser state:", userState);
+      console.log("Using state:", state);
+
+
 
       // 2. Fetch DB results for that state
       const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
