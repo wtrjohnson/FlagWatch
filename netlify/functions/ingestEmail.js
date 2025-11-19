@@ -162,7 +162,7 @@ export async function handler(event) {
   } else {
     await sql`
       INSERT INTO flag_status (country_code, state_code, half_mast, reason, start_date, end_date, raw_email)
-      VALUES ('US', ${stateCode}, true, ${reason}, ${start}, ${end}, ${emailText})
+      VALUES ('US', ${stateCode.toUpperCase()}, true, ${reason}, ${start}, ${end}, ${emailText})
       ON CONFLICT (country_code, state_code)
       DO UPDATE SET
         half_mast = EXCLUDED.half_mast,
