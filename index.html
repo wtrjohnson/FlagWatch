@@ -6,80 +6,82 @@
   <title>Flag Status</title>
   <style>
     body {
-      font-family: "Georgia", serif;
-      background-color: #fff;
-      color: #000;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
+  font-family: "Georgia", serif;
+  background-color: #fff;
+  color: #000;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
 
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 20px 40px;
-      font-weight: bold;
-      font-size: 1.2rem;
-    }
+header {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 20px 40px;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
 
-    header img {
-      height: 22px;
-      margin-right: 8px;
-    }
+header img {
+  height: 22px;
+  margin-right: 8px;
+}
 
-    main {
-      margin-top: 50px;
-    }
+main {
+  margin-top: 50px;
+}
 
-    .flag-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      gap: 50px; /* Adjust spacing between poles */
-      margin-bottom: 30px;
-    }
+.flag-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 80px;
+  margin-bottom: 30px;
+  background-color: transparent; /* Ensure no background */
+}
 
-    .flag-pole {
-      position: relative;
-      width: 120px; /* Increased width of the pole */
-      height: 500px; /* Increased height of the pole */
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      background-color: #8B8B8B; /* Optional pole color */
-      border-radius: 10px; /* Optional rounded pole */
-    }
+.flag-pole {
+  position: relative;
+  width: 200px;   /* Adjust width of the pole */
+  height: 350px;  /* Adjust height of the pole */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;  /* Align flag at the top of the pole */
+  background-color: transparent; /* Ensure no background */
+}
 
-    .flag-wrapper {
-      position: absolute;
-      top: 0; /* Full mast starts at the top */
-      transition: top 2.2s ease-in-out; /* Smooth transition */
-      width: 100%;
-      display: flex;
-      justify-content: center; /* Centers the flag inside the pole */
-    }
+.flag-wrapper {
+  position: absolute;
+  top: 0;  /* Flag starts at top for full-mast */
+  left: 0; /* Align with the left side of the pole */
+  transition: top 2.2s ease-in-out; /* Smooth transition for half-mast */
+}
 
-    /* When half-mast, push down 50% */
-    .half-mast {
-      top: 50%;
-    }
+.half-mast {
+  top: 50%; /* Flag moves down to half-mast */
+}
 
-    .flag-img {
-      width: 100%; /* Ensure flag fills the width of the pole */
-      height: auto;
-      object-fit: contain;
-    }
+.flag-img {
+  max-height: 100%;
+  object-fit: contain;
+  width: auto; /* Make flag responsive */
+  position: absolute;
+  top: 0; /* Flag starts at the top of the pole */
+  left: 0; /* Flag is aligned with the left side of the pole */
+  transform: translateY(0); /* Starts at the top */
+}
 
-    footer {
-      font-size: 1.4rem;
-      font-weight: bold;
-    }
+footer {
+  font-size: 1.4rem;
+  font-weight: bold;
+}
 
-    footer em {
-      font-style: italic;
-      color: #444;
-    }
+footer em {
+  font-style: italic;
+  color: #444;
+}
+
   </style>
 </head>
 <body>
