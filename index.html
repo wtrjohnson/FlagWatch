@@ -197,6 +197,10 @@ footer em {
           footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
         }
 
+console.log("Detected browser state:", userState);
+console.log("Flags to display:", usHalf, stateHalf);
+
+        
       } catch (err) {
         console.error("Error loading flag status:", err);
       }
