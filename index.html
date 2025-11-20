@@ -87,7 +87,7 @@ footer em {
 </head>
 <body>
   <header>
-    <img src="FlagIcons/USAFlag.png" alt="Flag Icon" />
+    <img src="/FlagIcons/USAFlag.png" alt="Flag Icon" />
     Flag Status
   </header>
 
@@ -95,16 +95,16 @@ footer em {
     <div class="flag-container">
       <div class="flag-pole">
         <!-- The flagpole is the same for all states, so we use a single image -->
-        <img id="us-pole" src="FlagIcons/FlagPole.png" alt="U.S. Flagpole" class="flag-img" />
+        <img id="us-pole" src="/FlagIcons/FlagPole.png" alt="U.S. Flagpole" class="flag-img" />
         <div class="flag-wrapper">
-          <img id="us-flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
+          <img id="us-flag" src="/FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
         </div>
       </div>
       <div class="flag-pole">
         <!-- Virginia flagpole -->
-        <img id="state-pole" src="FlagIcons/FlagPole.png" alt="State Flagpole" class="flag-img" />
+        <img id="state-pole" src="/FlagIcons/FlagPole.png" alt="State Flagpole" class="flag-img" />
         <div class="flag-wrapper">
-          <img id="state-flag" src="FlagIcons/VAFlag.png" alt="Virginia Flag" class="flag-img" />
+          <img id="state-flag" src="/FlagIcons/VAFlag.png" alt="Virginia Flag" class="flag-img" />
         </div>
       </div>
     </div>
@@ -185,10 +185,10 @@ footer em {
         const footer = document.getElementById('statusText');
 
         // 5. Update flag images
-        usFlagWrapper.src = usHalf ? 'FlagIcons/USAHalf.png' : 'FlagIcons/USAFlag.png';
+        usFlagWrapper.src = usHalf ? '/FlagIcons/USAHalf.png' : '/FlagIcons/USAFlag.png';
         stateFlagWrapper.src = stateHalf
-          ? `FlagIcons/${state}Flag_Half.png`
-          : `FlagIcons/${state}Flag.png`;
+          ? `/FlagIcons/${state}Flag_Half.png`
+          : `/FlagIcons/${state}Flag.png`;
 
         // 6. Update status text
         if (usHalf || stateHalf) {
