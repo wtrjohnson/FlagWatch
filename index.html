@@ -118,6 +118,7 @@ footer em {
       try {
         const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
         const data = await res.json();
+        console.log("Fetched Flag Data:", data);
 
         // ipinfo sometimes gives:
         // region: "Virginia"
@@ -197,9 +198,13 @@ footer em {
           footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
         }
 
-console.log("Detected browser state:", userState);
-console.log("Flags to display:", usHalf, stateHalf);
-console.log("API Response:", data);
+console.log("US Half Mast:", usHalf); // Check if US half mast is false
+console.log("State Half Mast:", stateHalf); // Check if state half mast is false
+console.log("Flag Image Paths:", usFlagWrapper.src, stateFlagWrapper.src); // Log flag image paths
+console.log("US Flag Element:", usFlagWrapper);
+console.log("State Flag Element:", stateFlagWrapper);
+
+
 
         
       } catch (err) {
