@@ -53,11 +53,13 @@ main {
 
 .flag-wrapper {
   position: absolute;
-  top: 0;
+  top: 48px;
   left: 50%;
-  transition: top 2.2s ease-in-out;
   z-index: 2;
 }
+   .flag-wrapper.ready {
+     transition: top 2.2s ease-in-out;
+   }
 
 .half-mast {
   top: 50%;
@@ -232,6 +234,11 @@ console.log("US Flag Element:", usFlagWrapper);
 console.log("State Flag Element:", stateFlagWrapper);
 
 
+window.addEventListener("load", () => {
+  document.querySelectorAll(".flag-wrapper").forEach(el =>
+    el.classList.add("ready")
+  );
+});
 
         
       } catch (err) {
