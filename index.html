@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flag Status</title>
  <style>
+   
 body {
   font-family: "Georgia", serif;
   background-color: #fff;
@@ -12,6 +13,11 @@ body {
   text-align: center;
   margin: 0;
   padding: 0;
+  background-image: url("FlagIcons/skyline.png");
+  background-size: cover;         /* Ensures full-page coverage */
+  background-repeat: no-repeat;
+  background-position: center top; /* Keeps buildings aligned at top */
+  background-attachment: fixed;    /* Optional: “parallax” effect */
 }
 
 header {
@@ -53,6 +59,14 @@ main {
   z-index: 1;
 }
 
+   #us-pole {
+  left: 1180px;     /* adjust horizontally */
+}
+
+#state-pole {
+  left: 1480px;     /* adjust horizontally */
+}
+
 .flag-wrapper {
   position: absolute;
   top: 25px;
@@ -86,6 +100,16 @@ main {
   left: 0;
 }
 
+#pole-layer {
+  position: absolute;
+  top: 320px;     /* Adjust vertical placement ONCE */
+  left: 0;
+  width: 100%;
+  height: 0;      /* We don’t want it taking up layout space */
+  pointer-events: none;
+}
+
+   
 footer {
   font-size: 1.4rem;
   font-weight: bold;
@@ -104,6 +128,20 @@ footer em {
   </header>
 
   <main>
+
+<div id="pole-layer">
+  <div id="us-pole" class="flag-pole">
+    <img src="FlagIcons/FlagPole.png" class="pole-img">
+    <img id="us-flag" src="FlagIcons/USAFlag.png" class="flag-img">
+  </div>
+
+  <div id="state-pole" class="flag-pole">
+    <img src="FlagIcons/FlagPole.png" class="pole-img">
+    <img id="state-flag" src="FlagIcons/VAFlag.png" class="flag-img">
+  </div>
+</div>
+
+    
     <div class="flag-container">
       <div class="flag-pole">
         <!-- The flagpole is the same for all states, so we use a single image -->
