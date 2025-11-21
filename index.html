@@ -193,19 +193,35 @@ footer em {
         const stateFlagWrapper = document.getElementById('state-flag');
         const footer = document.getElementById('statusText');
 
-        // 5. Update flag images
-        usFlagWrapper.src = usHalf ? '/FlagIcons/USAHalf.png' : '/FlagIcons/USAFlag.png';
-        stateFlagWrapper.src = stateHalf
-          ? `/FlagIcons/${state}Flag_Half.png`
-          : `/FlagIcons/${state}Flag.png`;
+// Replace this section in your loadFlagStatus() function:
 
-        // 6. Update status text
-        if (usHalf || stateHalf) {
-          const reason = stateRow?.reason || national?.reason || "an active proclamation";
-          footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
-        } else {
-          footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
-        }
+// 5. Update flag images - REMOVE half-mast image logic
+usFlagWrapper.src = '/FlagIcons/USAFlag.png';  // Always use full flag
+stateFlagWrapper.src = `/FlagIcons/${state}Flag.png`;  // Always use full flag
+
+// 5b. Add/remove half-mast class to animate position
+const usWrapper = usFlagWrapper.closest('.flag-wrapper');
+const stateWrapper = stateFlagWrapper.closest('.flag-wrapper');
+
+if (usHalf) {
+  usWrapper.classList.add('half-mast');
+} else {
+  usWrapper.classList.remove('half-mast');
+}
+
+if (stateHalf) {
+  stateWrapper.classList.add('half-mast');
+} else {
+  stateWrapper.classList.remove('half-mast');
+}
+
+// 6. Update status text (keep this as-is)
+if (usHalf || stateHalf) {
+  const reason = stateRow?.reason || national?.reason || "an active proclamation";
+  footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
+} else {
+  footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
+}
 
 console.log("US Half Mast:", usHalf); // Check if US half mast is false
 console.log("State Half Mast:", stateHalf); // Check if state half mast is false
