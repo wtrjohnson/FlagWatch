@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flag Status</title>
-  <style>
-    body {
+ <style>
+body {
   font-family: "Georgia", serif;
   background-color: #fff;
   color: #000;
@@ -38,40 +38,49 @@ main {
   align-items: center;
   gap: 80px;
   margin-bottom: 30px;
-  background-color: transparent; /* Ensure no background */
+  background-color: transparent;
 }
 
 .flag-pole {
   position: relative;
-  width: 200px;   /* Adjust width of the pole */
-  height: 350px;  /* Adjust height of the pole */
+  width: 200px;
+  height: 350px;
   display: flex;
   justify-content: center;
-  align-items: flex-start;  /* Align flag at the top of the pole */
-  background-color: transparent; /* Ensure no background */
+  align-items: flex-start;
+  background-color: transparent;
 }
 
 .flag-wrapper {
   position: absolute;
-  top: 0;  /* Flag starts at top for full-mast */
-  left: 0; /* Align with the left side of the pole */
-  transition: top 2.2s ease-in-out; /* Smooth transition for half-mast */
+  top: 0;
+  left: 0;
+  transition: top 2.2s ease-in-out;
   z-index: 2;
 }
 
 .half-mast {
-  top: 50%; /* Flag moves down to half-mast */
+  top: 50%;
 }
 
-.flag-img {
+/* Flagpole images */
+.flag-pole > img {
   max-height: 100%;
   object-fit: contain;
-  width: auto; /* Make flag responsive */
+  width: auto;
   position: absolute;
-  top: 0; /* Flag starts at the top of the pole */
-  left: 0; /* Flag is aligned with the left side of the pole */
-  transform: translateY(0); /* Starts at the top */
+  top: 0;
+  left: 0;
   z-index: 1;
+}
+
+/* Flag images inside wrapper */
+.flag-wrapper img {
+  height: 200px;
+  width: auto;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
 }
 
 footer {
@@ -83,14 +92,7 @@ footer em {
   font-style: italic;
   color: #444;
 }
-
-    .flag-wrapper img {
-  z-index: 2 !important;
-  border: 5px solid red !important;
-  background: yellow !important;
-}
-
-  </style>
+</style>
 </head>
 <body>
   <header>
