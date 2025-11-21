@@ -54,13 +54,14 @@ main {
 .flag-wrapper {
   position: absolute;
   top: 0;
-  left: 0;
+  left: 50%;
   transition: top 2.2s ease-in-out;
   z-index: 2;
 }
 
 .half-mast {
   top: 50%;
+  transform: translateY(-50%);
 }
 
 /* Flagpole images */
@@ -76,11 +77,12 @@ main {
 
 /* Flag images inside wrapper */
 .flag-wrapper img {
-  height: 200px;
+  height: 150px;
   width: auto;
   object-fit: contain;
   position: relative;
   z-index: 2;
+  left: 0;
 }
 
 footer {
