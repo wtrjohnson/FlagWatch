@@ -35,7 +35,8 @@ header img {
 }
 
 main {
-  margin-top: 275px; 
+  /* INSTRUCTION FOR STEP 3: To raise the poles, DECREASE this value (e.g., change 275px to 150px) */
+  margin-top: 150px; 
   position: relative;
   width: 100%; 
 }
@@ -47,7 +48,6 @@ main {
   left: 50%; 
   transform: translateX(-50%); 
   
-  /* Removed fixed width to prevent cutoff on narrow screens */
   display: flex;
   justify-content: center; 
   align-items: center;
@@ -55,8 +55,11 @@ main {
   background-color: transparent;
   z-index: 2;
   
-  /* Ensure it doesn't overflow horizontally on very small screens */
   max-width: 100%;
+  
+  /* FIX FOR STEP 2: Allows clicks to pass through the empty space around flags 
+     so they can reach the State button/footer below. */
+  pointer-events: none;
 }
 
 .flag-pole {
@@ -68,6 +71,8 @@ main {
   align-items: flex-start;
   background-color: transparent;
   z-index: 1;
+  /* Re-enable clicks on the poles themselves if needed */
+  pointer-events: auto;
 }
 
 .flag-wrapper {
@@ -76,6 +81,7 @@ main {
   left: 15px;
   transition: top 2.2s ease-in-out;
   z-index: 2;
+  pointer-events: auto;
 }
 
 .flag-wrapper.half-mast {
@@ -106,6 +112,8 @@ main {
   text-decoration: underline;
   cursor: pointer;
   font-weight: bold;
+  position: relative; /* Helps with z-indexing context if needed */
+  z-index: 10;
 }
 
 /* Dropdown */
@@ -118,11 +126,14 @@ main {
   width: 260px;
   max-height: 300px;
   overflow-y: auto;
-  z-index: 9999; /* Increased z-index to ensure it sits on top of everything */
+  z-index: 9999; 
   font-family: Georgia, serif;
   font-size: 1.1rem;
   line-height: 1.6;
   text-align: left;
+  /* Ensure the dropdown itself is clickable */
+  pointer-events: auto;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
 .state-dropdown div {
@@ -147,9 +158,11 @@ footer {
   font-size: 1.4rem;
   font-weight: bold;
   text-align: center;
-  /* Margin increased to 380px to ensure text sits BELOW the 350px flag poles */
+  /* INSTRUCTION FOR STEP 1: To lower the message, INCREASE this value (e.g., change 380px to 450px) */
   margin-top: 380px; 
   padding-bottom: 40px;
+  position: relative;
+  z-index: 5; /* Ensures text sits above background elements */
 }
 
 footer em {
@@ -160,20 +173,21 @@ footer em {
 /* Responsiveness Update */
 @media (max-width: 800px) {
   main {
+    /* Mobile instruction: adjust this if needed for mobile layout */
     margin-top: 150px; 
   }
 
   .flag-container {
-    gap: 20px; /* Reduced gap further for mobile */
+    gap: 20px; 
   }
 
   .flag-pole {
-    width: 150px; /* Smaller poles on mobile */
+    width: 150px; 
     height: 260px; 
   }
 
   .flag-wrapper img {
-    height: 110px; /* Smaller flags */
+    height: 110px; 
   }
   
   .flag-wrapper {
@@ -186,7 +200,6 @@ footer em {
   }
 
   footer {
-    /* Adjusted for shorter poles (260px) + gap */
     margin-top: 290px;
     font-size: 1.1rem;
     padding: 0 10px;
@@ -345,11 +358,20 @@ document.addEventListener("click", (e) => {
     const rect = e.target.getBoundingClientRect(); // Viewport coordinates of text
     const mainRect = main.getBoundingClientRect(); // Viewport coordinates of main container
     
-    // Calculate position relative to main container:
-    // (Text Y - Main Y) - Height - Spacing
-    dropdown.style.top = (rect.top - mainRect.top - dropdownHeight - 10) + "px"; 
+    // Calculate initial top position (above the text)
+    let topPos = (rect.top - mainRect.top - dropdownHeight - 10);
     
-    // (Text X - Main X)
+    // FIX FOR STEP 2: Smart Positioning
+    // If the calculation places the dropdown off the top of the container/screen,
+    // position it BELOW the text instead.
+    if (topPos < 0) {
+       topPos = (rect.bottom - mainRect.top + 10);
+    }
+    
+    dropdown.style.top = topPos + "px"; 
+    
+    // Center logic or left align logic
+    // Just keeping original left align logic relative to text start
     dropdown.style.left = (rect.left - mainRect.left) + "px";
     
     return;
