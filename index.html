@@ -44,8 +44,10 @@ main {
   align-items: center;
   gap: 80px;
   margin-bottom: 30px;
+  margin-left: 70px;
   background-color: transparent;
-  z-index: 2;
+  z-index: 1;
+  position: absolute;
 }
 
 .flag-pole {
@@ -56,7 +58,7 @@ main {
   justify-content: center;
   align-items: flex-start;
   background-color: transparent;
-  z-index: 1;
+  z-index: 2;
 }
 
 .flag-wrapper {
@@ -130,6 +132,17 @@ main {
 .hidden {
   display: none;
 }
+
+select {
+  position: relative;
+  z-index: 9999;
+  transform-origin: bottom;
+}
+
+select:focus {
+  transform: translateY(-150px);  /* adjust as needed */
+}
+
 
 footer {
   font-size: 1.4rem;
