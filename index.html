@@ -35,14 +35,27 @@ header img {
 }
 
 main {
-  margin-top: 275px;
+  /* Retain top margin, but remove margin-left as positioning will be absolute/fixed */
+  margin-top: 275px; 
+  /* Add relative positioning to keep the absolute flag container relative to this area */
+  position: relative;
+  /* Ensure main takes up the necessary width for the footer text to center */
+  width: 100%; 
 }
 
 .flag-container {
+  /* FIX 1: Absolute positioning to fix flags to the background image's sidewalk */
+  position: absolute;
+  top: 0; /* Aligns container top with main margin-top (275px from body top) */
+  left: 50%; /* Start in the middle */
+  transform: translateX(-50%); /* Center the container based on its own width */
+  width: 480px; /* Approximate width needed to contain the two poles and gap (200+80+200) */
+  
   display: flex;
-  justify-content: center;
+  /* Center the poles within the new fixed width container */
+  justify-content: center; 
   align-items: center;
-  gap: 80px;
+  gap: 80px; 
   margin-bottom: 30px;
   background-color: transparent;
   z-index: 2;
@@ -61,14 +74,16 @@ main {
 
 .flag-wrapper {
   position: absolute;
-  top: 25px;
+  /* FIX 2: Correct full-mast position */
+  top: 15px; 
   left: 15px;
   transition: top 2.2s ease-in-out;
   z-index: 2;
 }
 
 .flag-wrapper.half-mast {
-  top: 175px;
+  /* FIX 2: Correct half-mast position */
+  top: 80px;
 }
 
 .flag-pole > img {
@@ -134,11 +149,43 @@ main {
 footer {
   font-size: 1.4rem;
   font-weight: bold;
+  /* Ensure footer content is centered relative to the whole page */
+  text-align: center;
+  margin-top: 400px; /* Push the footer down below the absolutely positioned flags */
 }
 
 footer em {
   font-style: italic;
   color: #444;
+}
+
+/* Suggested Responsiveness Update */
+@media (max-width: 800px) {
+  main {
+    margin-top: 150px; 
+  }
+
+  .flag-container {
+    width: 380px; /* Adjust container width for smaller screens */
+    gap: 30px; /* Reduce gap between flags */
+  }
+
+  .flag-pole {
+    width: 175px;
+    height: 300px; 
+  }
+
+  .flag-wrapper img {
+    height: 120px; 
+  }
+  
+  .flag-wrapper.half-mast {
+    top: 60px; /* Adjusted half-mast for new pole height */
+  }
+
+  footer {
+    margin-top: 350px;
+  }
 }
 </style>
 </head>
@@ -168,7 +215,6 @@ footer em {
 
   <footer id="statusText"></footer>
 
-  <!-- SINGLE dropdown used for all state clicks -->
   <div id="stateDropdown" class="state-dropdown hidden"></div>
 </main>
 
@@ -278,9 +324,17 @@ document.addEventListener("click", (e) => {
 
   if (e.target.classList.contains("selectable-state")) {
     const rect = e.target.getBoundingClientRect();
+    
+    // Temporarily remove hidden class to measure height
+    dropdown.classList.remove("hidden"); 
+    const dropdownHeight = dropdown.offsetHeight;
+    
+    // FIX 3: Dynamic positioning: rect.top (top of the text) - dropdownHeight - 10px (for spacing above the text).
+    dropdown.style.top = (rect.top - dropdownHeight - 10) + "px"; 
     dropdown.style.left = rect.left + "px";
-    dropdown.style.top = rect.bottom + "px";
-    dropdown.classList.toggle("hidden");
+
+    // Toggle back (it's already removed, so this will show/hide correctly)
+    dropdown.classList.toggle("hidden"); 
     return;
   }
 
