@@ -41,19 +41,22 @@ main {
 }
 
 .flag-container {
-  /* FIX 1: Use absolute positioning relative to main to keep flags fixed on the background image */
+  /* Absolute positioning to keep flags fixed relative to the background/main */
   position: absolute;
   top: 0; 
   left: 50%; 
   transform: translateX(-50%); 
   
+  /* Removed fixed width to prevent cutoff on narrow screens */
   display: flex;
   justify-content: center; 
   align-items: center;
   gap: 80px; 
-  margin-bottom: 30px;
   background-color: transparent;
   z-index: 2;
+  
+  /* Ensure it doesn't overflow horizontally on very small screens */
+  max-width: 100%;
 }
 
 .flag-pole {
@@ -111,14 +114,15 @@ main {
   background: #fff;
   border: 2px solid #000;
   padding: 12px;
-  margin-top: 4px;
+  /* top/left set by JS */
   width: 260px;
   max-height: 300px;
   overflow-y: auto;
-  z-index: 999;
+  z-index: 9999; /* Increased z-index to ensure it sits on top of everything */
   font-family: Georgia, serif;
   font-size: 1.1rem;
   line-height: 1.6;
+  text-align: left;
 }
 
 .state-dropdown div {
@@ -143,8 +147,9 @@ footer {
   font-size: 1.4rem;
   font-weight: bold;
   text-align: center;
-  /* FIX 2: Bring footer text back up closer to the flags */
-  margin-top: 300px; 
+  /* Margin increased to 380px to ensure text sits BELOW the 350px flag poles */
+  margin-top: 380px; 
+  padding-bottom: 40px;
 }
 
 footer em {
@@ -152,24 +157,28 @@ footer em {
   color: #444;
 }
 
-/* Suggested Responsiveness Update */
+/* Responsiveness Update */
 @media (max-width: 800px) {
   main {
     margin-top: 150px; 
   }
 
   .flag-container {
-    width: 380px; 
-    gap: 30px; 
+    gap: 20px; /* Reduced gap further for mobile */
   }
 
   .flag-pole {
-    width: 175px;
-    height: 300px; 
+    width: 150px; /* Smaller poles on mobile */
+    height: 260px; 
   }
 
   .flag-wrapper img {
-    height: 120px; 
+    height: 110px; /* Smaller flags */
+  }
+  
+  .flag-wrapper {
+    top: 10px;
+    left: 10px;
   }
   
   .flag-wrapper.half-mast {
@@ -177,7 +186,10 @@ footer em {
   }
 
   footer {
-    margin-top: 250px; /* Reduced further for better positioning on small screens */
+    /* Adjusted for shorter poles (260px) + gap */
+    margin-top: 290px;
+    font-size: 1.1rem;
+    padding: 0 10px;
   }
 }
 </style>
@@ -311,37 +323,45 @@ async function loadFlagStatus(forcedState = null) {
   }
 }
 
-/* Dropdown positioning */
+/* Dropdown positioning and toggle logic */
 document.addEventListener("click", (e) => {
   const dropdown = document.getElementById("stateDropdown");
+  const main = document.querySelector("main");
+  
   const isSelectableState = e.target.classList.contains("selectable-state");
   const isDropdownOpen = !dropdown.classList.contains("hidden");
 
   if (isSelectableState) {
-    const rect = e.target.getBoundingClientRect();
-    
-    // FIX 3: If the dropdown is already open and they click the text, close it.
+    // If it's already open, just close it and return
     if (isDropdownOpen) {
       dropdown.classList.add("hidden");
       return;
     }
     
-    // Make it visible to get accurate height, then set position
-    dropdown.classList.remove("hidden");
+    // Otherwise, calculate position and open it
+    dropdown.classList.remove("hidden"); // Temporarily show to measure height
     const dropdownHeight = dropdown.offsetHeight;
     
-    // Position 10px above the selectable text
-    dropdown.style.top = (rect.top - dropdownHeight - 10) + "px"; 
-    dropdown.style.left = rect.left + "px";
+    const rect = e.target.getBoundingClientRect(); // Viewport coordinates of text
+    const mainRect = main.getBoundingClientRect(); // Viewport coordinates of main container
+    
+    // Calculate position relative to main container:
+    // (Text Y - Main Y) - Height - Spacing
+    dropdown.style.top = (rect.top - mainRect.top - dropdownHeight - 10) + "px"; 
+    
+    // (Text X - Main X)
+    dropdown.style.left = (rect.left - mainRect.left) + "px";
     
     return;
   }
 
   // Hide the dropdown if the click was not on the dropdown itself
-  if (!dropdown.contains(e.target)) dropdown.classList.add("hidden");
+  if (!dropdown.contains(e.target)) {
+    dropdown.classList.add("hidden");
+  }
 });
 
-/* Handle dropdown click */
+/* Handle dropdown selection click */
 dropdown.addEventListener("click", (e) => {
   if (!e.target.dataset.code) return;
 
