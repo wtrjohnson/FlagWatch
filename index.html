@@ -15,16 +15,24 @@ body {
   background: #fff;
   color: #000;
   text-align: center;
+
+  /* NEW: Use CSS Grid to stack elements */
+  display: grid;
+  grid-template-areas: "content";
 }
 
 /* ---------------- HEADER ---------------- */
 
 header {
+  grid-area: content; /* Layer on top */
   display: flex;
   align-items: center;
   padding: 20px 40px;
   font-weight: bold;
   font-size: 1.3rem;
+  z-index: 2; /* Ensure header is above content */
+  width: 100%;
+  box-sizing: border-box;
 }
 
 header img {
@@ -32,35 +40,48 @@ header img {
   margin-right: 10px;
 }
 
-/* ---------------- SKYLINE SYSTEM (Option A) ---------------- */
+/* ---------------- SKYLINE SYSTEM (New Structure) ---------------- */
 
-.skyline-wrapper {
+/* The skyline image needs its own wrapper to take up the full width/height */
+.skyline-bg-wrapper {
+  grid-area: content; /* Align with main content area */
+  position: relative; /* Anchor the image */
   width: 100%;
-  display: flex;
-  justify-content: center;
-  margin-top: 80px;       /* headroom above skyline */
-  position: relative;     /* anchor flags */
+  height: 100vh; /* Optional: Make it full height for visual context */
+  overflow: hidden;
+  z-index: 1; /* Place below content */
 }
 
 .skyline-img {
-  width: 80%;             /* OPTION A width */
+  width: 100%; /* CHANGED: Now takes up 100% of the browser width */
   height: auto;
   display: block;
+  /* Adjust image vertical position. For example, to make the ground line visible */
+  position: absolute;
+  bottom: 0;
+  left: 0;
 }
 
-/*
-  The skyline image has ~58px of white padding below the ground line.
-  We anchor the flagpoles so their bases sit *on the illustrated ground line*.
-*/
-.flag-container {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 58px;           /* <-- THIS anchors the pole bases to the ground line */
+/* ---------------- FLAG + POLE CONTAINER ---------------- */
+
+.flag-status-container {
+  grid-area: content; /* Layer on top */
+  z-index: 10;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh; /* Match the height of the skyline-bg-wrapper */
+}
+
+.flag-container {
+  /* This container holds the flags, positioned below the header and status text */
+  display: flex;
+  justify-content: center;
   gap: 80px;
   pointer-events: none;
-  z-index: 10;
+  /* Adjust vertical position of flags here */
+  margin-top: 150px; /* Example vertical offset from top of page */
 }
 
 /* ---------------- FLAG + POLE SYSTEM ---------------- */
@@ -107,8 +128,9 @@ header img {
 footer#statusText {
   font-size: 1.4rem;
   font-weight: bold;
-  margin-top: 60px;      /* space below skyline */
+  margin-top: 60px;      /* space below flags */
   margin-bottom: 60px;
+  z-index: 15; /* Ensure above skyline */
 }
 
 footer#statusText em {
@@ -124,7 +146,7 @@ footer#statusText em {
 }
 
 .state-dropdown {
-  position: absolute;
+  position: fixed; /* Use fixed for proper positioning over layered content */
   background: #fff;
   border: 2px solid #000;
   padding: 12px;
@@ -159,8 +181,10 @@ footer#statusText em {
 /* ---------------- RESPONSIVE ---------------- */
 
 @media (max-width: 800px) {
-  .skyline-img {
-    width: 95%;
+  /* Removed .skyline-img width override as it's now 100% */
+  
+  .flag-container {
+    margin-top: 100px;
   }
 
   .flag-pole {
@@ -196,39 +220,37 @@ footer#statusText em {
   FlagWatch
 </header>
 
-<!-- ================= SKYLINE IMAGE (Option A) ================= -->
-<div class="skyline-wrapper">
-  <img src="FlagIcons/skyline.png" class="skyline-img" alt="Skyline">
+<div class="flag-status-container">
 
-  <!-- ================= FLAGS ANCHORED TO GROUND LINE ================= -->
-  <div class="flag-container">
+    <div class="flag-container">
 
-    <!-- U.S. FLAG -->
-    <div class="flag-pole">
-      <img src="FlagIcons/FlagPole.png" class="pole" alt="U.S. Flagpole">
-      <div class="flag-wrapper" id="us-wrapper">
-        <img id="us-flag" class="flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag">
-      </div>
+        <div class="flag-pole">
+          <img src="FlagIcons/FlagPole.png" class="pole" alt="U.S. Flagpole">
+          <div class="flag-wrapper" id="us-wrapper">
+            <img id="us-flag" class="flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag">
+          </div>
+        </div>
+
+        <div class="flag-pole">
+          <img src="FlagIcons/FlagPole.png" class="pole" alt="State Flagpole">
+          <div class="flag-wrapper" id="state-wrapper">
+            <img id="state-flag" class="flag" src="FlagIcons/VAFlag.png" alt="State Flag">
+          </div>
+        </div>
+
     </div>
 
-    <!-- STATE FLAG -->
-    <div class="flag-pole">
-      <img src="FlagIcons/FlagPole.png" class="pole" alt="State Flagpole">
-      <div class="flag-wrapper" id="state-wrapper">
-        <img id="state-flag" class="flag" src="FlagIcons/VAFlag.png" alt="State Flag">
-      </div>
-    </div>
+    <footer id="statusText"></footer>
 
-  </div>
 </div>
 
-<!-- ================= STATUS TEXT ================= -->
-<footer id="statusText"></footer>
 
-<!-- ================= DROPDOWN ================= -->
+<div class="skyline-bg-wrapper">
+  <img src="FlagIcons/skyline.png" class="skyline-img" alt="Skyline">
+</div>
+
 <div id="stateDropdown" class="state-dropdown hidden"></div>
 
-<!-- ================= SCRIPT ================= -->
 <script>
 /* ---------------- State list ---------------- */
 const stateMapFull = {
@@ -256,6 +278,7 @@ dropdown.innerHTML = Object.entries(stateMapFull)
 /* Detect state */
 async function detectUserState() {
   try {
+    // Note: The token is visible in the HTML/JS, which is not recommended for production code.
     const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
     const info = await res.json();
 
@@ -276,6 +299,7 @@ async function loadFlagStatus(forcedState = null) {
   const userState = await detectUserState();
   const state = (forcedState || userState || "VA").toUpperCase();
 
+  // Note: This relies on a Netlify function, which won't run outside of that environment.
   const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
   const data = await res.json();
 
@@ -323,6 +347,7 @@ document.addEventListener("click", (e) => {
     dropdown.classList.toggle("hidden");
 
     if (!dropdown.classList.contains("hidden")) {
+      // Use clientX/Y for positioning relative to the viewport
       dropdown.style.top = rect.bottom + "px";
       dropdown.style.left = rect.left + "px";
     }
