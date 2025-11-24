@@ -3,59 +3,67 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flag Status</title>
+  <title>FlagWatch</title>
 
 <style>
+/* ---------------- GLOBAL ---------------- */
+
 body {
   font-family: "Georgia", serif;
-  background-color: #fff;
-  color: #000;
-  text-align: center;
   margin: 0;
   padding: 0;
-  background-image: url("FlagIcons/skyline.png");
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center top;
-  background-attachment: fixed;
+  background: #fff;
+  color: #000;
+  text-align: center;
 }
+
+/* ---------------- HEADER ---------------- */
 
 header {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   padding: 20px 40px;
   font-weight: bold;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
 }
 
 header img {
   height: 22px;
-  margin-right: 8px;
+  margin-right: 10px;
 }
 
-/* CLEAN + RESET: main no longer pushes flags or text */
-main {
-  margin-top: 0;
-  position: relative;
+/* ---------------- SKYLINE SYSTEM (Option A) ---------------- */
+
+.skyline-wrapper {
   width: 100%;
-}
-
-/* CLEAN + CORRECT FLAG POSITIONING */
-.flag-container {
-  position: absolute;
-  top: -300px; /* ← ADJUST HERE to raise/lower poles */
-  left: 50%;
-  transform: translateX(-50%);
   display: flex;
   justify-content: center;
-  align-items: center;
-  gap: 80px;
-  background-color: transparent;
-  z-index: 5;
-  max-width: 100%;
-  pointer-events: none;
+  margin-top: 80px;       /* headroom above skyline */
+  position: relative;     /* anchor flags */
 }
+
+.skyline-img {
+  width: 80%;             /* OPTION A width */
+  height: auto;
+  display: block;
+}
+
+/*
+  The skyline image has ~58px of white padding below the ground line.
+  We anchor the flagpoles so their bases sit *on the illustrated ground line*.
+*/
+.flag-container {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 58px;           /* <-- THIS anchors the pole bases to the ground line */
+  display: flex;
+  gap: 80px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ---------------- FLAG + POLE SYSTEM ---------------- */
 
 .flag-pole {
   position: relative;
@@ -64,53 +72,57 @@ main {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  background-color: transparent;
-  z-index: 1;
   pointer-events: auto;
+}
+
+.flag-pole img.pole {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 100%;
 }
 
 .flag-wrapper {
   position: absolute;
-  top: 15px;
-  left: 15px;
+  top: 15px;              /* full-mast */
+  left: 50%;
+  transform: translateX(-50%);
   transition: top 2.2s ease-in-out;
-  z-index: 2;
-  pointer-events: auto;
+  z-index: 20;
 }
 
 .flag-wrapper.half-mast {
   top: 80px;
 }
 
-.flag-pole > img {
-  max-height: 100%;
-  object-fit: contain;
-  width: auto;
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 1;
-}
-
-.flag-wrapper img {
+.flag-wrapper img.flag {
   height: 150px;
   width: auto;
   object-fit: contain;
-  position: relative;
-  z-index: 2;
-  left: 0;
 }
 
-/* CLICKABLE STATE TEXT */
+/* ---------------- FOOTER / STATUS TEXT ---------------- */
+
+footer#statusText {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-top: 60px;      /* space below skyline */
+  margin-bottom: 60px;
+}
+
+footer#statusText em {
+  color: #444;
+}
+
+/* ---------------- DROPDOWN ---------------- */
+
 .selectable-state {
   text-decoration: underline;
   cursor: pointer;
   font-weight: bold;
-  position: relative;
-  z-index: 10;
 }
 
-/* DROPDOWN MENU */
 .state-dropdown {
   position: absolute;
   background: #fff;
@@ -122,9 +134,7 @@ main {
   z-index: 9999;
   font-family: Georgia, serif;
   font-size: 1.1rem;
-  line-height: 1.6;
   text-align: left;
-  pointer-events: auto;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
 
@@ -139,34 +149,18 @@ main {
 }
 
 .state-dropdown div:hover {
-  background-color: #eee;
+  background: #eee;
 }
 
 .hidden {
   display: none;
 }
 
-/* CLEAN SEPARATE MESSAGE POSITIONING */
-footer#statusText {
-  font-size: 1.4rem;
-  font-weight: bold;
-  text-align: center;
-  margin-top: 670px; /* ← ADJUST HERE to move message independently */
-  padding-bottom: 40px;
-  position: relative;
-  z-index: 10;
-}
+/* ---------------- RESPONSIVE ---------------- */
 
-footer em {
-  font-style: italic;
-  color: #444;
-}
-
-/* RESPONSIVE */
 @media (max-width: 800px) {
-  .flag-container {
-    top: -60px;
-    gap: 20px;
+  .skyline-img {
+    width: 95%;
   }
 
   .flag-pole {
@@ -174,13 +168,12 @@ footer em {
     height: 260px;
   }
 
-  .flag-wrapper img {
+  .flag-wrapper img.flag {
     height: 110px;
   }
 
   .flag-wrapper {
     top: 10px;
-    left: 10px;
   }
 
   .flag-wrapper.half-mast {
@@ -188,43 +181,56 @@ footer em {
   }
 
   footer#statusText {
-    margin-top: 180px;
     font-size: 1.1rem;
+    margin-top: 40px;
     padding: 0 10px;
   }
 }
 </style>
 </head>
+
 <body>
 
 <header>
-  <img src="/FlagIcons/USAFlag.png" alt="Flag Icon" />
-  Flag Status
+  <img src="FlagIcons/USAFlag.png" alt="Flag Icon">
+  FlagWatch
 </header>
 
-<main>
+<!-- ================= SKYLINE IMAGE (Option A) ================= -->
+<div class="skyline-wrapper">
+  <img src="FlagIcons/skyline.png" class="skyline-img" alt="Skyline">
+
+  <!-- ================= FLAGS ANCHORED TO GROUND LINE ================= -->
   <div class="flag-container">
+
+    <!-- U.S. FLAG -->
     <div class="flag-pole">
-      <img id="us-pole" src="/FlagIcons/FlagPole.png" alt="U.S. Flagpole" />
-      <div class="flag-wrapper">
-        <img id="us-flag" src="/FlagIcons/USAFlag.png" alt="U.S. Flag" />
+      <img src="FlagIcons/FlagPole.png" class="pole" alt="U.S. Flagpole">
+      <div class="flag-wrapper" id="us-wrapper">
+        <img id="us-flag" class="flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag">
       </div>
     </div>
 
+    <!-- STATE FLAG -->
     <div class="flag-pole">
-      <img id="state-pole" src="/FlagIcons/FlagPole.png" alt="State Flagpole" />
-      <div class="flag-wrapper">
-        <img id="state-flag" src="/FlagIcons/VAFlag.png" alt="State Flag" />
+      <img src="FlagIcons/FlagPole.png" class="pole" alt="State Flagpole">
+      <div class="flag-wrapper" id="state-wrapper">
+        <img id="state-flag" class="flag" src="FlagIcons/VAFlag.png" alt="State Flag">
       </div>
     </div>
+
   </div>
+</div>
 
-  <footer id="statusText"></footer>
+<!-- ================= STATUS TEXT ================= -->
+<footer id="statusText"></footer>
 
-  <div id="stateDropdown" class="state-dropdown hidden"></div>
-</main>
+<!-- ================= DROPDOWN ================= -->
+<div id="stateDropdown" class="state-dropdown hidden"></div>
 
+<!-- ================= SCRIPT ================= -->
 <script>
+/* ---------------- State list ---------------- */
 const stateMapFull = {
   AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
   CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
@@ -241,14 +247,13 @@ const stateMapFull = {
   WI: "Wisconsin", WY: "Wyoming", DC: "District of Columbia"
 };
 
-let selectedState = null;
-
-/* Populate dropdown once */
+/* Populate dropdown */
 const dropdown = document.getElementById("stateDropdown");
 dropdown.innerHTML = Object.entries(stateMapFull)
   .map(([code, name]) => `<div data-code="${code}">${name}</div>`)
   .join("");
 
+/* Detect state */
 async function detectUserState() {
   try {
     const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
@@ -266,10 +271,10 @@ async function detectUserState() {
   }
 }
 
+/* Load status */
 async function loadFlagStatus(forcedState = null) {
   const userState = await detectUserState();
   const state = (forcedState || userState || "VA").toUpperCase();
-  selectedState = state;
 
   const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
   const data = await res.json();
@@ -280,70 +285,47 @@ async function loadFlagStatus(forcedState = null) {
   const usHalf = national?.half_mast;
   const stateHalf = stateRow?.half_mast;
 
-  const usWrap = document.getElementById("us-flag").closest(".flag-wrapper");
-  const stWrap = document.getElementById("state-flag").closest(".flag-wrapper");
+  /* Apply images */
+  document.getElementById("us-flag").src = "FlagIcons/USAFlag.png";
+  document.getElementById("state-flag").src = `FlagIcons/${state}Flag.png`;
 
-  document.getElementById("us-flag").src = "/FlagIcons/USAFlag.png";
-  document.getElementById("state-flag").src = `/FlagIcons/${state}Flag.png`;
+  /* Half-mast movement */
+  document.getElementById("us-wrapper").classList.toggle("half-mast", usHalf);
+  document.getElementById("state-wrapper").classList.toggle("half-mast", stateHalf);
 
-  usWrap.classList.toggle("half-mast", usHalf);
-  stWrap.classList.toggle("half-mast", stateHalf);
-
+  /* Update text */
   const footer = document.getElementById("statusText");
   const stateName = stateMapFull[state];
 
   if (usHalf && stateHalf) {
     const reason = stateRow?.reason || national?.reason || "an active proclamation";
-    footer.innerHTML = `
-      United States and <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.
-    `;
+    footer.innerHTML = `United States and <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.`;
   } else if (!usHalf && stateHalf) {
-    const reason = stateRow?.reason || "an active proclamation";
     footer.innerHTML = `
       United States flags are not at half mast<br>
-      <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.
-    `;
+      <span class="selectable-state">${stateName}</span> flags are at half mast.`;
   } else if (usHalf && !stateHalf) {
-    const reason = national?.reason || "an active proclamation";
     footer.innerHTML = `
-      United States flags are at half mast for ${reason}.<br>
-      <span class="selectable-state">${stateName}</span> flags are not at half mast.
-    `;
+      United States flags are at half mast<br>
+      <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
   } else {
     footer.innerHTML = `
-      United States and <span class="selectable-state">${stateName}</span> flags are not at half mast.
-    `;
+      United States and <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
   }
 }
 
 /* Dropdown logic */
 document.addEventListener("click", (e) => {
-  const dropdown = document.getElementById("stateDropdown");
-  const main = document.querySelector("main");
+  const isSelectable = e.target.classList.contains("selectable-state");
 
-  const isSelectableState = e.target.classList.contains("selectable-state");
-  const isOpen = !dropdown.classList.contains("hidden");
-
-  if (isSelectableState) {
-    if (isOpen) {
-      dropdown.classList.add("hidden");
-      return;
-    }
-
-    dropdown.classList.remove("hidden");
-    const dropdownHeight = dropdown.offsetHeight;
-
+  if (isSelectable) {
     const rect = e.target.getBoundingClientRect();
-    const mainRect = main.getBoundingClientRect();
+    dropdown.classList.toggle("hidden");
 
-    let topPos = (rect.top - mainRect.top - dropdownHeight - 10);
-
-    if (topPos < 0) {
-       topPos = (rect.bottom - mainRect.top + 10);
+    if (!dropdown.classList.contains("hidden")) {
+      dropdown.style.top = rect.bottom + "px";
+      dropdown.style.left = rect.left + "px";
     }
-
-    dropdown.style.top = topPos + "px";
-    dropdown.style.left = (rect.left - mainRect.left) + "px";
 
     return;
   }
@@ -353,14 +335,15 @@ document.addEventListener("click", (e) => {
   }
 });
 
-/* Dropdown select */
+/* Choose state */
 dropdown.addEventListener("click", (e) => {
-  if (!e.target.dataset.code) return;
-  const newState = e.target.dataset.code;
-  dropdown.classList.add("hidden");
-  loadFlagStatus(newState);
+  if (e.target.dataset.code) {
+    dropdown.classList.add("hidden");
+    loadFlagStatus(e.target.dataset.code);
+  }
 });
 
+/* Init */
 loadFlagStatus();
 </script>
 
