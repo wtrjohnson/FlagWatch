@@ -92,6 +92,56 @@ main {
   left: 0;
 }
 
+/* Container */
+#stateSelectorContainer {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+  font-weight: bold;
+}
+
+/* Underlined clickable state text */
+.selectable-state {
+  text-decoration: underline;
+  cursor: pointer;
+  border-bottom: 2px solid #000;
+  padding-bottom: 2px;
+}
+
+/* Dropdown */
+.state-dropdown {
+  position: absolute;
+  background: #fff;
+  border: 2px solid #000;
+  padding: 12px;
+  margin-top: 8px;
+  width: 260px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 999;
+  font-family: Georgia, serif;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+/* Architectural vibe: thin dividers */
+.state-dropdown div {
+  padding: 6px 4px;
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+}
+
+.state-dropdown div:last-child {
+  border-bottom: none;
+}
+
+.state-dropdown div:hover {
+  background-color: #eee;
+}
+
+.hidden {
+  display: none;
+}
 
    
 footer {
@@ -110,6 +160,11 @@ footer em {
     <img src="/FlagIcons/USAFlag.png" alt="Flag Icon" />
     Flag Status
   </header>
+
+<div id="stateSelectorContainer">
+  <span id="currentState" class="selectable-state">Loading…</span>
+  <div id="stateDropdown" class="state-dropdown hidden"></div>
+</div>
 
   <main>
 
@@ -183,11 +238,13 @@ footer em {
       }
     }
 
-    async function loadFlagStatus() {
+    async function loadFlagStatus(forcedState = null) {
       try {
         // 1. Detect state automatically
         const userState = await detectUserState();
-        const state = (userState || "US").toUpperCase();
+const state = (forcedState || userState || "US").toUpperCase();
+setStateLabel(state); // update the text label
+
 
         console.log("Detected browser state:", userState);
         console.log("Using state:", state);
@@ -230,13 +287,26 @@ if (stateHalf) {
   stateWrapper.classList.remove('half-mast');
 }
 
-// 6. Update status text (keep this as-is)
-if (usHalf || stateHalf) {
+// 6. Update status text (new custom logic)
+if (usHalf && stateHalf) {
   const reason = stateRow?.reason || national?.reason || "an active proclamation";
-  footer.textContent = `Flags are at half-mast in honor of ${reason}.`;
+  footer.textContent = `United States and ${state} flags are at half mast for ${reason}.`;
+
+} else if (!usHalf && stateHalf) {
+  const reason = stateRow?.reason || "an active proclamation";
+  footer.innerHTML = `
+    United States flags are not at half mast<br>
+    ${state} flags are at half mast for ${reason}.
+  `;
+
+} else if (usHalf && !stateHalf) {
+  const reason = national?.reason || "an active proclamation";
+  footer.textContent = `United States flags are at half mast for ${reason}.`;
+
 } else {
   footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
 }
+
 
 console.log("US Half Mast:", usHalf); // Check if US half mast is false
 console.log("State Half Mast:", stateHalf); // Check if state half mast is false
@@ -256,6 +326,55 @@ window.addEventListener("load", () => {
         console.error("Error loading flag status:", err);
       }
     }
+
+    const stateMapFull = {
+  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
+  CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
+  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois",
+  IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana",
+  ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan",
+  MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana",
+  NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey",
+  NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota",
+  OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania",
+  RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota",
+  TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont",
+  VA: "Virginia", WA: "Washington", WV: "West Virginia",
+  WI: "Wisconsin", WY: "Wyoming", DC: "District of Columbia"
+};
+
+let selectedState = null;
+
+// Populate the dropdown
+const dropdown = document.getElementById("stateDropdown");
+dropdown.innerHTML = Object.entries(stateMapFull)
+  .map(([code, name]) => `<div data-code="${code}">${name}</div>`)
+  .join("");
+
+// Set detected or selected state in UI
+function setStateLabel(stateCode) {
+  const full = stateMapFull[stateCode] || stateCode;
+  document.getElementById("currentState").textContent = full;
+}
+
+// Open/close dropdown
+document.getElementById("currentState").addEventListener("click", () => {
+  dropdown.classList.toggle("hidden");
+});
+
+// Handle selection
+dropdown.addEventListener("click", (e) => {
+  if (!e.target.dataset.code) return;
+
+  selectedState = e.target.dataset.code;
+  setStateLabel(selectedState);
+
+  dropdown.classList.add("hidden");
+
+  // Reload flag logic using selected state
+  loadFlagStatus(selectedState);
+});
+
 
     loadFlagStatus();
   </script>
