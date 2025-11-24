@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Flag Status</title>
- <style>
-   
+
+<style>
 body {
   font-family: "Georgia", serif;
   background-color: #fff;
@@ -14,10 +14,10 @@ body {
   margin: 0;
   padding: 0;
   background-image: url("FlagIcons/skyline.png");
-  background-size: cover;         /* Ensures full-page coverage */
+  background-size: cover;
   background-repeat: no-repeat;
-  background-position: center top; /* Keeps buildings aligned at top */
-  background-attachment: fixed;    /* Optional: “parallax” effect */
+  background-position: center top;
+  background-attachment: fixed;
 }
 
 header {
@@ -67,11 +67,10 @@ main {
   z-index: 2;
 }
 
-   .flag-wrapper.half-mast {
-  top: 175px;  /* or whatever the half-mast point is */
+.flag-wrapper.half-mast {
+  top: 175px;
 }
 
-/* Flagpole images */
 .flag-pole > img {
   max-height: 100%;
   object-fit: contain;
@@ -82,7 +81,6 @@ main {
   z-index: 1;
 }
 
-/* Flag images inside wrapper */
 .flag-wrapper img {
   height: 150px;
   width: auto;
@@ -92,20 +90,11 @@ main {
   left: 0;
 }
 
-/* Container */
-#stateSelectorContainer {
-  margin-top: 10px;
-  margin-bottom: 20px;
-  font-size: 1.4rem;
-  font-weight: bold;
-}
-
-/* Underlined clickable state text */
+/* Clickable state text INSIDE the message */
 .selectable-state {
   text-decoration: underline;
   cursor: pointer;
-  border-bottom: 2px solid #000;
-  padding-bottom: 2px;
+  font-weight: bold;
 }
 
 /* Dropdown */
@@ -114,7 +103,7 @@ main {
   background: #fff;
   border: 2px solid #000;
   padding: 12px;
-  margin-top: 8px;
+  margin-top: 4px;
   width: 260px;
   max-height: 300px;
   overflow-y: auto;
@@ -124,7 +113,6 @@ main {
   line-height: 1.6;
 }
 
-/* Architectural vibe: thin dividers */
 .state-dropdown div {
   padding: 6px 4px;
   cursor: pointer;
@@ -143,7 +131,6 @@ main {
   display: none;
 }
 
-   
 footer {
   font-size: 1.4rem;
   font-weight: bold;
@@ -156,178 +143,37 @@ footer em {
 </style>
 </head>
 <body>
-  <header>
-    <img src="/FlagIcons/USAFlag.png" alt="Flag Icon" />
-    Flag Status
-  </header>
 
-<div id="stateSelectorContainer">
-  <span id="currentState" class="selectable-state">Loading…</span>
-  <div id="stateDropdown" class="state-dropdown hidden"></div>
-</div>
+<header>
+  <img src="/FlagIcons/USAFlag.png" alt="Flag Icon" />
+  Flag Status
+</header>
 
-  <main>
-
-
-
-    
-    <div class="flag-container">
-      <div class="flag-pole">
-        <!-- The flagpole is the same for all states, so we use a single image -->
-        <img id="us-pole" src="/FlagIcons/FlagPole.png" alt="U.S. Flagpole" class="flag-img" />
-        <div class="flag-wrapper">
-          <img id="us-flag" src="/FlagIcons/USAFlag.png" alt="U.S. Flag" class="flag-img" />
-        </div>
-      </div>
-      <div class="flag-pole">
-        <!-- Virginia flagpole -->
-        <img id="state-pole" src="/FlagIcons/FlagPole.png" alt="State Flagpole" class="flag-img" />
-        <div class="flag-wrapper">
-          <img id="state-flag" src="/FlagIcons/VAFlag.png" alt="Virginia Flag" class="flag-img" />
-        </div>
+<main>
+  <div class="flag-container">
+    <div class="flag-pole">
+      <img id="us-pole" src="/FlagIcons/FlagPole.png" alt="U.S. Flagpole" />
+      <div class="flag-wrapper">
+        <img id="us-flag" src="/FlagIcons/USAFlag.png" alt="U.S. Flag" />
       </div>
     </div>
-    <footer id="statusText">
-      There are currently <em>no</em> half-mast orders.
-    </footer>
-  </main>
 
-  <script>
-    async function detectUserState() {
-      try {
-        const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
-        const data = await res.json();
-        console.log("Fetched Flag Data:", data);
+    <div class="flag-pole">
+      <img id="state-pole" src="/FlagIcons/FlagPole.png" alt="State Flagpole" />
+      <div class="flag-wrapper">
+        <img id="state-flag" src="/FlagIcons/VAFlag.png" alt="State Flag" />
+      </div>
+    </div>
+  </div>
 
-        // ipinfo sometimes gives:
-        // region: "Virginia"
-        // region_code: undefined
+  <footer id="statusText"></footer>
 
-        // First try region_code
-        if (data.region_code) {
-          return data.region_code.toUpperCase();
-        }
+  <!-- SINGLE dropdown used for all state clicks -->
+  <div id="stateDropdown" class="state-dropdown hidden"></div>
+</main>
 
-        // Fallback: map full state name → abbreviation
-        const stateMap = {
-          "ALABAMA":"AL","ALASKA":"AK","ARIZONA":"AZ","ARKANSAS":"AR",
-          "CALIFORNIA":"CA","COLORADO":"CO","CONNECTICUT":"CT","DELAWARE":"DE",
-          "FLORIDA":"FL","GEORGIA":"GA","HAWAII":"HI","IDAHO":"ID","ILLINOIS":"IL",
-          "INDIANA":"IN","IOWA":"IA","KANSAS":"KS","KENTUCKY":"KY","LOUISIANA":"LA",
-          "MAINE":"ME","MARYLAND":"MD","MASSACHUSETTS":"MA","MICHIGAN":"MI",
-          "MINNESOTA":"MN","MISSISSIPPI":"MS","MISSOURI":"MO","MONTANA":"MT",
-          "NEBRASKA":"NE","NEVADA":"NV","NEW HAMPSHIRE":"NH","NEW JERSEY":"NJ",
-          "NEW MEXICO":"NM","NEW YORK":"NY","NORTH CAROLINA":"NC","NORTH DAKOTA":"ND",
-          "OHIO":"OH","OKLAHOMA":"OK","OREGON":"OR","PENNSYLVANIA":"PA",
-          "RHODE ISLAND":"RI","SOUTH CAROLINA":"SC","SOUTH DAKOTA":"SD",
-          "TENNESSEE":"TN","TEXAS":"TX","UTAH":"UT","VERMONT":"VT","VIRGINIA":"VA",
-          "WASHINGTON":"WA","WEST VIRGINIA":"WV","WISCONSIN":"WI","WYOMING":"WY",
-          "DISTRICT OF COLUMBIA": "DC", "WASHINGTON DC": "DC", "WASHINGTON, D.C.": "DC",
-          "WASHINGTON, DC": "DC", "DC": "DC", "D.C.": "DC"
-        };
-
-        const region = (data.region || "").toUpperCase();
-        if (stateMap[region]) {
-          return stateMap[region];
-        }
-
-        return null;
-      } catch (e) {
-        console.error("IP lookup failed:", e);
-        return null;
-      }
-    }
-
-    async function loadFlagStatus(forcedState = null) {
-      try {
-        // 1. Detect state automatically
-        const userState = await detectUserState();
-const state = (forcedState || userState || "US").toUpperCase();
-setStateLabel(state); // update the text label
-
-
-        console.log("Detected browser state:", userState);
-        console.log("Using state:", state);
-
-        // 2. Fetch DB results for that state
-        const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
-        const data = await res.json();
-
-        // 3. Identify national + state rows
-        const national = data.find(r => r.state_code === null);
-        const stateRow = data.find(r => (r.state_code || "").toUpperCase() === state);
-
-        const usHalf = national?.half_mast;
-        const stateHalf = stateRow?.half_mast;
-
-        // 4. DOM elements
-        const usFlagWrapper = document.getElementById('us-flag');
-        const stateFlagWrapper = document.getElementById('state-flag');
-        const footer = document.getElementById('statusText');
-
-// Replace this section in your loadFlagStatus() function:
-
-// 5. Update flag images - REMOVE half-mast image logic
-usFlagWrapper.src = '/FlagIcons/USAFlag.png';  // Always use full flag
-stateFlagWrapper.src = `/FlagIcons/${state}Flag.png`;  // Always use full flag
-
-// 5b. Add/remove half-mast class to animate position
-const usWrapper = usFlagWrapper.closest('.flag-wrapper');
-const stateWrapper = stateFlagWrapper.closest('.flag-wrapper');
-
-if (usHalf) {
-  usWrapper.classList.add('half-mast');
-} else {
-  usWrapper.classList.remove('half-mast');
-}
-
-if (stateHalf) {
-  stateWrapper.classList.add('half-mast');
-} else {
-  stateWrapper.classList.remove('half-mast');
-}
-
-// 6. Update status text (new custom logic)
-if (usHalf && stateHalf) {
-  const reason = stateRow?.reason || national?.reason || "an active proclamation";
-  footer.textContent = `United States and ${state} flags are at half mast for ${reason}.`;
-
-} else if (!usHalf && stateHalf) {
-  const reason = stateRow?.reason || "an active proclamation";
-  footer.innerHTML = `
-    United States flags are not at half mast<br>
-    ${state} flags are at half mast for ${reason}.
-  `;
-
-} else if (usHalf && !stateHalf) {
-  const reason = national?.reason || "an active proclamation";
-  footer.textContent = `United States flags are at half mast for ${reason}.`;
-
-} else {
-  footer.innerHTML = 'There are currently <em>no</em> half-mast orders.';
-}
-
-
-console.log("US Half Mast:", usHalf); // Check if US half mast is false
-console.log("State Half Mast:", stateHalf); // Check if state half mast is false
-console.log("Flag Image Paths:", usFlagWrapper.src, stateFlagWrapper.src); // Log flag image paths
-console.log("US Flag Element:", usFlagWrapper);
-console.log("State Flag Element:", stateFlagWrapper);
-
-
-window.addEventListener("load", () => {
-  document.querySelectorAll(".flag-wrapper").forEach(el =>
-    el.classList.add("ready")
-  );
-});
-
-        
-      } catch (err) {
-        console.error("Error loading flag status:", err);
-      }
-    }
-
-    const stateMapFull = {
+<script>
+const stateMapFull = {
   AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
   CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
   FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois",
@@ -345,38 +191,113 @@ window.addEventListener("load", () => {
 
 let selectedState = null;
 
-// Populate the dropdown
+/* Populate dropdown once */
 const dropdown = document.getElementById("stateDropdown");
 dropdown.innerHTML = Object.entries(stateMapFull)
   .map(([code, name]) => `<div data-code="${code}">${name}</div>`)
   .join("");
 
-// Set detected or selected state in UI
-function setStateLabel(stateCode) {
-  const full = stateMapFull[stateCode] || stateCode;
-  document.getElementById("currentState").textContent = full;
+async function detectUserState() {
+  try {
+    const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
+    const info = await res.json();
+
+    if (info.region_code) return info.region_code.toUpperCase();
+
+    const region = (info.region || "").toUpperCase();
+    const map = stateMapFull;
+    const found = Object.keys(map).find(
+      abbr => map[abbr].toUpperCase() === region
+    );
+
+    return found || null;
+  } catch {
+    return null;
+  }
 }
 
-// Open/close dropdown
-document.getElementById("currentState").addEventListener("click", () => {
-  dropdown.classList.toggle("hidden");
+async function loadFlagStatus(forcedState = null) {
+  const userState = await detectUserState();
+  const state = (forcedState || userState || "VA").toUpperCase();
+  selectedState = state;
+
+  const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
+  const data = await res.json();
+
+  const national = data.find(r => r.state_code === null);
+  const stateRow = data.find(r => (r.state_code || "").toUpperCase() === state);
+
+  const usHalf = national?.half_mast;
+  const stateHalf = stateRow?.half_mast;
+
+  const usFlag = document.getElementById("us-flag");
+  const stFlag = document.getElementById("state-flag");
+
+  const usWrap = usFlag.closest(".flag-wrapper");
+  const stWrap = stFlag.closest(".flag-wrapper");
+
+  usFlag.src = "/FlagIcons/USAFlag.png";
+  stFlag.src = `/FlagIcons/${state}Flag.png`;
+
+  if (usHalf) usWrap.classList.add("half-mast");
+  else usWrap.classList.remove("half-mast");
+
+  if (stateHalf) stWrap.classList.add("half-mast");
+  else stWrap.classList.remove("half-mast");
+
+  const footer = document.getElementById("statusText");
+  const stateName = stateMapFull[state];
+
+  if (usHalf && stateHalf) {
+    const reason = stateRow?.reason || national?.reason || "an active proclamation";
+    footer.innerHTML = `
+      United States and <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.
+    `;
+  } else if (!usHalf && stateHalf) {
+    const reason = stateRow?.reason || "an active proclamation";
+    footer.innerHTML = `
+      United States flags are not at half mast<br>
+      <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.
+    `;
+  } else if (usHalf && !stateHalf) {
+    const reason = national?.reason || "an active proclamation";
+    footer.innerHTML = `
+      United States flags are at half mast for ${reason}.<br>
+      <span class="selectable-state">${stateName}</span> flags are not at half mast.
+    `;
+  } else {
+    footer.innerHTML = `
+      United States and <span class="selectable-state">${stateName}</span> flags are not at half mast.
+    `;
+  }
+}
+
+/* Dropdown positioning */
+document.addEventListener("click", (e) => {
+  const dropdown = document.getElementById("stateDropdown");
+
+  if (e.target.classList.contains("selectable-state")) {
+    const rect = e.target.getBoundingClientRect();
+    dropdown.style.left = rect.left + "px";
+    dropdown.style.top = rect.bottom + "px";
+    dropdown.classList.toggle("hidden");
+    return;
+  }
+
+  if (!dropdown.contains(e.target)) dropdown.classList.add("hidden");
 });
 
-// Handle selection
+/* Handle dropdown click */
 dropdown.addEventListener("click", (e) => {
   if (!e.target.dataset.code) return;
 
-  selectedState = e.target.dataset.code;
-  setStateLabel(selectedState);
-
+  const newState = e.target.dataset.code;
   dropdown.classList.add("hidden");
-
-  // Reload flag logic using selected state
-  loadFlagStatus(selectedState);
+  loadFlagStatus(newState);
 });
 
+loadFlagStatus();
+</script>
 
-    loadFlagStatus();
-  </script>
 </body>
 </html>
