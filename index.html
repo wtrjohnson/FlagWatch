@@ -188,8 +188,9 @@ async function loadFlagStatus(forcedState = null, svgDoc = null) {
   const flagState = svgDoc.getElementById("FlagState");
 
   /* Update Images */
-  flagUS.setAttribute("href", "FlagIcons/USAFlag.png");
-  flagState.setAttribute("href", `FlagIcons/${state}Flag.png`);
+  flagUS.setAttribute("href", "USAFlag.png");
+  flagState.setAttribute("href", `${state}Flag.png`);
+
 
   /* Apply Half-Mast (by adjusting y-position) */
   const FULL = 775;
