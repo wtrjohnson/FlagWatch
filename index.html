@@ -34,31 +34,26 @@ header img {
   margin-right: 8px;
 }
 
+/* CLEAN + RESET: main no longer pushes flags or text */
 main {
-  /* INSTRUCTION FOR STEP 3: To raise the poles, DECREASE this value (e.g., change 275px to 150px) */
-  margin-top: 100px; 
+  margin-top: 0;
   position: relative;
-  width: 100%; 
+  width: 100%;
 }
 
+/* CLEAN + CORRECT FLAG POSITIONING */
 .flag-container {
-  /* Absolute positioning to keep flags fixed relative to the background/main */
   position: absolute;
-  top: 0; 
-  left: 50%; 
-  transform: translateX(-50%); 
-  
+  top: -120px; /* ← ADJUST HERE to raise/lower poles */
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
-  justify-content: center; 
+  justify-content: center;
   align-items: center;
-  gap: 80px; 
+  gap: 80px;
   background-color: transparent;
-  z-index: 2;
-  
+  z-index: 5;
   max-width: 100%;
-  
-  /* FIX FOR STEP 2: Allows clicks to pass through the empty space around flags 
-     so they can reach the State button/footer below. */
   pointer-events: none;
 }
 
@@ -71,13 +66,12 @@ main {
   align-items: flex-start;
   background-color: transparent;
   z-index: 1;
-  /* Re-enable clicks on the poles themselves if needed */
   pointer-events: auto;
 }
 
 .flag-wrapper {
   position: absolute;
-  top: 15px; 
+  top: 15px;
   left: 15px;
   transition: top 2.2s ease-in-out;
   z-index: 2;
@@ -107,31 +101,29 @@ main {
   left: 0;
 }
 
-/* Clickable state text INSIDE the message */
+/* CLICKABLE STATE TEXT */
 .selectable-state {
   text-decoration: underline;
   cursor: pointer;
   font-weight: bold;
-  position: relative; /* Helps with z-indexing context if needed */
+  position: relative;
   z-index: 10;
 }
 
-/* Dropdown */
+/* DROPDOWN MENU */
 .state-dropdown {
   position: absolute;
   background: #fff;
   border: 2px solid #000;
   padding: 12px;
-  /* top/left set by JS */
   width: 260px;
   max-height: 300px;
   overflow-y: auto;
-  z-index: 9999; 
+  z-index: 9999;
   font-family: Georgia, serif;
   font-size: 1.1rem;
   line-height: 1.6;
   text-align: left;
-  /* Ensure the dropdown itself is clickable */
   pointer-events: auto;
   box-shadow: 0 4px 8px rgba(0,0,0,0.2);
 }
@@ -154,14 +146,15 @@ main {
   display: none;
 }
 
-footer {
+/* CLEAN SEPARATE MESSAGE POSITIONING */
+footer#statusText {
   font-size: 1.4rem;
   font-weight: bold;
   text-align: center;
-  margin-top: 500px; 
+  margin-top: 260px; /* ← ADJUST HERE to move message independently */
   padding-bottom: 40px;
   position: relative;
-  z-index: 5; /* Ensures text sits above background elements */
+  z-index: 10;
 }
 
 footer em {
@@ -169,37 +162,33 @@ footer em {
   color: #444;
 }
 
-/* Responsiveness Update */
+/* RESPONSIVE */
 @media (max-width: 800px) {
-  main {
-    /* Mobile instruction: adjust this if needed for mobile layout */
-    margin-top: 150px; 
-  }
-
   .flag-container {
-    gap: 20px; 
+    top: -60px;
+    gap: 20px;
   }
 
   .flag-pole {
-    width: 150px; 
-    height: 260px; 
+    width: 150px;
+    height: 260px;
   }
 
   .flag-wrapper img {
-    height: 110px; 
+    height: 110px;
   }
-  
+
   .flag-wrapper {
     top: 10px;
     left: 10px;
   }
-  
+
   .flag-wrapper.half-mast {
     top: 60px;
   }
 
-  footer {
-    margin-top: 290px;
+  footer#statusText {
+    margin-top: 180px;
     font-size: 1.1rem;
     padding: 0 10px;
   }
@@ -268,11 +257,9 @@ async function detectUserState() {
     if (info.region_code) return info.region_code.toUpperCase();
 
     const region = (info.region || "").toUpperCase();
-    const map = stateMapFull;
-    const found = Object.keys(map).find(
-      abbr => map[abbr].toUpperCase() === region
+    const found = Object.keys(stateMapFull).find(
+      abbr => stateMapFull[abbr].toUpperCase() === region
     );
-
     return found || null;
   } catch {
     return null;
@@ -293,20 +280,14 @@ async function loadFlagStatus(forcedState = null) {
   const usHalf = national?.half_mast;
   const stateHalf = stateRow?.half_mast;
 
-  const usFlag = document.getElementById("us-flag");
-  const stFlag = document.getElementById("state-flag");
+  const usWrap = document.getElementById("us-flag").closest(".flag-wrapper");
+  const stWrap = document.getElementById("state-flag").closest(".flag-wrapper");
 
-  const usWrap = usFlag.closest(".flag-wrapper");
-  const stWrap = stFlag.closest(".flag-wrapper");
+  document.getElementById("us-flag").src = "/FlagIcons/USAFlag.png";
+  document.getElementById("state-flag").src = `/FlagIcons/${state}Flag.png`;
 
-  usFlag.src = "/FlagIcons/USAFlag.png";
-  stFlag.src = `/FlagIcons/${state}Flag.png`;
-
-  if (usHalf) usWrap.classList.add("half-mast");
-  else usWrap.classList.remove("half-mast");
-
-  if (stateHalf) stWrap.classList.add("half-mast");
-  else stWrap.classList.remove("half-mast");
+  usWrap.classList.toggle("half-mast", usHalf);
+  stWrap.classList.toggle("half-mast", stateHalf);
 
   const footer = document.getElementById("statusText");
   const stateName = stateMapFull[state];
@@ -335,57 +316,46 @@ async function loadFlagStatus(forcedState = null) {
   }
 }
 
-/* Dropdown positioning and toggle logic */
+/* Dropdown logic */
 document.addEventListener("click", (e) => {
   const dropdown = document.getElementById("stateDropdown");
   const main = document.querySelector("main");
-  
+
   const isSelectableState = e.target.classList.contains("selectable-state");
-  const isDropdownOpen = !dropdown.classList.contains("hidden");
+  const isOpen = !dropdown.classList.contains("hidden");
 
   if (isSelectableState) {
-    // If it's already open, just close it and return
-    if (isDropdownOpen) {
+    if (isOpen) {
       dropdown.classList.add("hidden");
       return;
     }
-    
-    // Otherwise, calculate position and open it
-    dropdown.classList.remove("hidden"); // Temporarily show to measure height
+
+    dropdown.classList.remove("hidden");
     const dropdownHeight = dropdown.offsetHeight;
-    
-    const rect = e.target.getBoundingClientRect(); // Viewport coordinates of text
-    const mainRect = main.getBoundingClientRect(); // Viewport coordinates of main container
-    
-    // Calculate initial top position (above the text)
+
+    const rect = e.target.getBoundingClientRect();
+    const mainRect = main.getBoundingClientRect();
+
     let topPos = (rect.top - mainRect.top - dropdownHeight - 10);
-    
-    // FIX FOR STEP 2: Smart Positioning
-    // If the calculation places the dropdown off the top of the container/screen,
-    // position it BELOW the text instead.
+
     if (topPos < 0) {
        topPos = (rect.bottom - mainRect.top + 10);
     }
-    
-    dropdown.style.top = topPos + "px"; 
-    
-    // Center logic or left align logic
-    // Just keeping original left align logic relative to text start
+
+    dropdown.style.top = topPos + "px";
     dropdown.style.left = (rect.left - mainRect.left) + "px";
-    
+
     return;
   }
 
-  // Hide the dropdown if the click was not on the dropdown itself
   if (!dropdown.contains(e.target)) {
     dropdown.classList.add("hidden");
   }
 });
 
-/* Handle dropdown selection click */
+/* Dropdown select */
 dropdown.addEventListener("click", (e) => {
   if (!e.target.dataset.code) return;
-
   const newState = e.target.dataset.code;
   dropdown.classList.add("hidden");
   loadFlagStatus(newState);
