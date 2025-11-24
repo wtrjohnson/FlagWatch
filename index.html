@@ -5,212 +5,108 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FlagWatch</title>
 
-<style>
-/* ---------------- GLOBAL ---------------- */
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Georgia, serif;
+      background: #fff;
+      color: #000;
+      text-align: center;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
 
-body {
-  font-family: "Georgia", serif;
-  margin: 0;
-  padding: 0;
-  background: #fff;
-  color: #000;
-  text-align: center;
+    header {
+      display: flex;
+      align-items: center;
+      padding: 20px 40px;
+      font-weight: bold;
+      font-size: 1.4rem;
+      z-index: 10;
+    }
 
-  /* NEW: Use CSS Grid to stack elements */
-  display: grid;
-  grid-template-areas: "content";
-}
+    header img {
+      height: 22px;
+      margin-right: 10px;
+    }
 
-/* ---------------- HEADER ---------------- */
+    /* SVG container holds the full skyline illustration */
+    .svg-container {
+      width: 100%;
+      position: relative;
+      z-index: 1;
+      flex-grow: 1;
+    }
 
-header {
-  grid-area: content; /* Layer on top */
-  display: flex;
-  align-items: center;
-  padding: 20px 40px;
-  font-weight: bold;
-  font-size: 1.3rem;
-  z-index: 2; /* Ensure header is above content */
-  width: 100%;
-  box-sizing: border-box;
-}
+    /* Let the SVG scale proportionally across the whole width */
+    #skylineSVG {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
 
-header img {
-  height: 22px;
-  margin-right: 10px;
-}
+    /* Status footer */
+    footer#statusText {
+      font-size: 1.35rem;
+      font-weight: bold;
+      margin: 30px 0 40px 0;
+      z-index: 20;
+      padding: 0 10px;
+    }
 
-/* ---------------- SKYLINE SYSTEM (New Structure) ---------------- */
+    footer#statusText em {
+      color: #444;
+    }
 
-/* The skyline image needs its own wrapper to take up the full width/height */
-.skyline-bg-wrapper {
-  grid-area: content; /* Align with main content area */
-  position: relative; /* Anchor the image */
-  width: 100%;
-  height: 100vh; /* Optional: Make it full height for visual context */
-  overflow: hidden;
-  z-index: 1; /* Place below content */
-}
+    /* State dropdown */
+    .selectable-state {
+      text-decoration: underline;
+      cursor: pointer;
+      font-weight: bold;
+    }
 
-.skyline-img {
-  width: 100%; /* CHANGED: Now takes up 100% of the browser width */
-  height: auto;
-  display: block;
-  /* Adjust image vertical position. For example, to make the ground line visible */
-  position: absolute;
-  bottom: 0;
-  left: 0;
-}
+    .state-dropdown {
+      position: fixed;
+      background: #fff;
+      border: 2px solid #000;
+      padding: 12px;
+      width: 260px;
+      max-height: 300px;
+      overflow-y: auto;
+      z-index: 9999;
+      font-family: Georgia, serif;
+      font-size: 1.1rem;
+      text-align: left;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
 
-/* ---------------- FLAG + POLE CONTAINER ---------------- */
+    .state-dropdown div {
+      padding: 6px 4px;
+      cursor: pointer;
+      border-bottom: 1px solid #ccc;
+    }
 
-.flag-status-container {
-  grid-area: content; /* Layer on top */
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  min-height: 100vh; /* Match the height of the skyline-bg-wrapper */
-}
+    .state-dropdown div:last-child {
+      border-bottom: none;
+    }
 
-.flag-container {
-  /* This container holds the flags, positioned below the header and status text */
-  display: flex;
-  justify-content: center;
-  gap: 80px;
-  pointer-events: none;
-  /* Adjust vertical position of flags here */
-  margin-top: 150px; /* Example vertical offset from top of page */
-}
+    .state-dropdown div:hover {
+      background: #eee;
+    }
 
-/* ---------------- FLAG + POLE SYSTEM ---------------- */
+    .hidden {
+      display: none;
+    }
 
-.flag-pole {
-  position: relative;
-  width: 200px;
-  height: 350px;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  pointer-events: auto;
-}
-
-.flag-pole img.pole {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  height: 100%;
-}
-
-.flag-wrapper {
-  position: absolute;
-  top: 15px;              /* full-mast */
-  left: 50%;
-  transform: translateX(-50%);
-  transition: top 2.2s ease-in-out;
-  z-index: 20;
-}
-
-.flag-wrapper.half-mast {
-  top: 80px;
-}
-
-.flag-wrapper img.flag {
-  height: 150px;
-  width: auto;
-  object-fit: contain;
-}
-
-/* ---------------- FOOTER / STATUS TEXT ---------------- */
-
-footer#statusText {
-  font-size: 1.4rem;
-  font-weight: bold;
-  margin-top: 60px;      /* space below flags */
-  margin-bottom: 60px;
-  z-index: 15; /* Ensure above skyline */
-}
-
-footer#statusText em {
-  color: #444;
-}
-
-/* ---------------- DROPDOWN ---------------- */
-
-.selectable-state {
-  text-decoration: underline;
-  cursor: pointer;
-  font-weight: bold;
-}
-
-.state-dropdown {
-  position: fixed; /* Use fixed for proper positioning over layered content */
-  background: #fff;
-  border: 2px solid #000;
-  padding: 12px;
-  width: 260px;
-  max-height: 300px;
-  overflow-y: auto;
-  z-index: 9999;
-  font-family: Georgia, serif;
-  font-size: 1.1rem;
-  text-align: left;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-}
-
-.state-dropdown div {
-  padding: 6px 4px;
-  cursor: pointer;
-  border-bottom: 1px solid #ccc;
-}
-
-.state-dropdown div:last-child {
-  border-bottom: none;
-}
-
-.state-dropdown div:hover {
-  background: #eee;
-}
-
-.hidden {
-  display: none;
-}
-
-/* ---------------- RESPONSIVE ---------------- */
-
-@media (max-width: 800px) {
-  /* Removed .skyline-img width override as it's now 100% */
-  
-  .flag-container {
-    margin-top: 100px;
-  }
-
-  .flag-pole {
-    width: 150px;
-    height: 260px;
-  }
-
-  .flag-wrapper img.flag {
-    height: 110px;
-  }
-
-  .flag-wrapper {
-    top: 10px;
-  }
-
-  .flag-wrapper.half-mast {
-    top: 60px;
-  }
-
-  footer#statusText {
-    font-size: 1.1rem;
-    margin-top: 40px;
-    padding: 0 10px;
-  }
-}
-</style>
+    @media (max-width: 800px) {
+      footer#statusText {
+        font-size: 1.1rem;
+        margin-top: 20px;
+      }
+    }
+  </style>
 </head>
 
 <body>
@@ -220,39 +116,17 @@ footer#statusText em {
   FlagWatch
 </header>
 
-<div class="flag-status-container">
-
-    <div class="flag-container">
-
-        <div class="flag-pole">
-          <img src="FlagIcons/FlagPole.png" class="pole" alt="U.S. Flagpole">
-          <div class="flag-wrapper" id="us-wrapper">
-            <img id="us-flag" class="flag" src="FlagIcons/USAFlag.png" alt="U.S. Flag">
-          </div>
-        </div>
-
-        <div class="flag-pole">
-          <img src="FlagIcons/FlagPole.png" class="pole" alt="State Flagpole">
-          <div class="flag-wrapper" id="state-wrapper">
-            <img id="state-flag" class="flag" src="FlagIcons/VAFlag.png" alt="State Flag">
-          </div>
-        </div>
-
-    </div>
-
-    <footer id="statusText"></footer>
-
+<!-- Responsive SVG Skyline -->
+<div class="svg-container">
+  <object id="skylineSVG" data="skyline.svg" type="image/svg+xml"></object>
 </div>
 
-
-<div class="skyline-bg-wrapper">
-  <img src="FlagIcons/skyline.png" class="skyline-img" alt="Skyline">
-</div>
+<footer id="statusText"></footer>
 
 <div id="stateDropdown" class="state-dropdown hidden"></div>
 
 <script>
-/* ---------------- State list ---------------- */
+/* ---------------- State Map ---------------- */
 const stateMapFull = {
   AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
   CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
@@ -269,16 +143,15 @@ const stateMapFull = {
   WI: "Wisconsin", WY: "Wyoming", DC: "District of Columbia"
 };
 
-/* Populate dropdown */
+/* ---------------- Dropdown ---------------- */
 const dropdown = document.getElementById("stateDropdown");
 dropdown.innerHTML = Object.entries(stateMapFull)
   .map(([code, name]) => `<div data-code="${code}">${name}</div>`)
   .join("");
 
-/* Detect state */
+/* ---------------- Detect User State ---------------- */
 async function detectUserState() {
   try {
-    // Note: The token is visible in the HTML/JS, which is not recommended for production code.
     const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
     const info = await res.json();
 
@@ -294,12 +167,13 @@ async function detectUserState() {
   }
 }
 
-/* Load status */
-async function loadFlagStatus(forcedState = null) {
+/* ---------------- Main Flag Status Logic ---------------- */
+async function loadFlagStatus(forcedState = null, svgDoc = null) {
+  if (!svgDoc) return; // Wait for SVG to load
+
   const userState = await detectUserState();
   const state = (forcedState || userState || "VA").toUpperCase();
 
-  // Note: This relies on a Netlify function, which won't run outside of that environment.
   const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
   const data = await res.json();
 
@@ -309,36 +183,44 @@ async function loadFlagStatus(forcedState = null) {
   const usHalf = national?.half_mast;
   const stateHalf = stateRow?.half_mast;
 
-  /* Apply images */
-  document.getElementById("us-flag").src = "FlagIcons/USAFlag.png";
-  document.getElementById("state-flag").src = `FlagIcons/${state}Flag.png`;
+  /* Access SVG elements */
+  const flagUS = svgDoc.getElementById("FlagUS");
+  const flagState = svgDoc.getElementById("FlagState");
 
-  /* Half-mast movement */
-  document.getElementById("us-wrapper").classList.toggle("half-mast", usHalf);
-  document.getElementById("state-wrapper").classList.toggle("half-mast", stateHalf);
+  /* Update Images */
+  flagUS.setAttribute("href", "FlagIcons/USAFlag.png");
+  flagState.setAttribute("href", `FlagIcons/${state}Flag.png`);
 
-  /* Update text */
+  /* Apply Half-Mast (by adjusting y-position) */
+  const FULL = 775;
+  const HALF = 825;
+
+  flagUS.setAttribute("y", usHalf ? HALF : FULL);
+  flagState.setAttribute("y", stateHalf ? HALF : FULL);
+
+  /* Update Text */
   const footer = document.getElementById("statusText");
   const stateName = stateMapFull[state];
 
   if (usHalf && stateHalf) {
     const reason = stateRow?.reason || national?.reason || "an active proclamation";
-    footer.innerHTML = `United States and <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.`;
+    footer.innerHTML =
+      `United States and <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.`;
   } else if (!usHalf && stateHalf) {
-    footer.innerHTML = `
-      United States flags are not at half mast<br>
-      <span class="selectable-state">${stateName}</span> flags are at half mast.`;
+    footer.innerHTML =
+      `United States flags are not at half mast<br>
+       <span class="selectable-state">${stateName}</span> flags are at half mast.`;
   } else if (usHalf && !stateHalf) {
-    footer.innerHTML = `
-      United States flags are at half mast<br>
-      <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
+    footer.innerHTML =
+      `United States flags are at half mast<br>
+       <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
   } else {
-    footer.innerHTML = `
-      United States and <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
+    footer.innerHTML =
+      `United States and <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
   }
 }
 
-/* Dropdown logic */
+/* ---------------- Dropdown Interaction ---------------- */
 document.addEventListener("click", (e) => {
   const isSelectable = e.target.classList.contains("selectable-state");
 
@@ -347,11 +229,9 @@ document.addEventListener("click", (e) => {
     dropdown.classList.toggle("hidden");
 
     if (!dropdown.classList.contains("hidden")) {
-      // Use clientX/Y for positioning relative to the viewport
       dropdown.style.top = rect.bottom + "px";
       dropdown.style.left = rect.left + "px";
     }
-
     return;
   }
 
@@ -360,16 +240,19 @@ document.addEventListener("click", (e) => {
   }
 });
 
-/* Choose state */
 dropdown.addEventListener("click", (e) => {
-  if (e.target.dataset.code) {
+  if (e.target.dataset.code && window.loadedSvgDoc) {
     dropdown.classList.add("hidden");
-    loadFlagStatus(e.target.dataset.code);
+    loadFlagStatus(e.target.dataset.code, window.loadedSvgDoc);
   }
 });
 
-/* Init */
-loadFlagStatus();
+/* ---------------- SVG Initialization ---------------- */
+document.getElementById("skylineSVG").addEventListener("load", () => {
+  const svgDoc = document.getElementById("skylineSVG").contentDocument;
+  window.loadedSvgDoc = svgDoc;
+  loadFlagStatus(null, svgDoc);
+});
 </script>
 
 </body>
