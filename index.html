@@ -35,24 +35,19 @@ header img {
 }
 
 main {
-  /* Retain top margin, but remove margin-left as positioning will be absolute/fixed */
   margin-top: 275px; 
-  /* Add relative positioning to keep the absolute flag container relative to this area */
   position: relative;
-  /* Ensure main takes up the necessary width for the footer text to center */
   width: 100%; 
 }
 
 .flag-container {
-  /* FIX 1: Absolute positioning to fix flags to the background image's sidewalk */
+  /* FIX 1: Use absolute positioning relative to main to keep flags fixed on the background image */
   position: absolute;
-  top: 0; /* Aligns container top with main margin-top (275px from body top) */
-  left: 50%; /* Start in the middle */
-  transform: translateX(-50%); /* Center the container based on its own width */
-  width: 480px; /* Approximate width needed to contain the two poles and gap (200+80+200) */
+  top: 0; 
+  left: 50%; 
+  transform: translateX(-50%); 
   
   display: flex;
-  /* Center the poles within the new fixed width container */
   justify-content: center; 
   align-items: center;
   gap: 80px; 
@@ -74,7 +69,6 @@ main {
 
 .flag-wrapper {
   position: absolute;
-  /* FIX 2: Correct full-mast position */
   top: 15px; 
   left: 15px;
   transition: top 2.2s ease-in-out;
@@ -82,7 +76,6 @@ main {
 }
 
 .flag-wrapper.half-mast {
-  /* FIX 2: Correct half-mast position */
   top: 80px;
 }
 
@@ -149,9 +142,9 @@ main {
 footer {
   font-size: 1.4rem;
   font-weight: bold;
-  /* Ensure footer content is centered relative to the whole page */
   text-align: center;
-  margin-top: 400px; /* Push the footer down below the absolutely positioned flags */
+  /* FIX 2: Bring footer text back up closer to the flags */
+  margin-top: 300px; 
 }
 
 footer em {
@@ -166,8 +159,8 @@ footer em {
   }
 
   .flag-container {
-    width: 380px; /* Adjust container width for smaller screens */
-    gap: 30px; /* Reduce gap between flags */
+    width: 380px; 
+    gap: 30px; 
   }
 
   .flag-pole {
@@ -180,11 +173,11 @@ footer em {
   }
   
   .flag-wrapper.half-mast {
-    top: 60px; /* Adjusted half-mast for new pole height */
+    top: 60px;
   }
 
   footer {
-    margin-top: 350px;
+    margin-top: 250px; /* Reduced further for better positioning on small screens */
   }
 }
 </style>
@@ -321,23 +314,30 @@ async function loadFlagStatus(forcedState = null) {
 /* Dropdown positioning */
 document.addEventListener("click", (e) => {
   const dropdown = document.getElementById("stateDropdown");
+  const isSelectableState = e.target.classList.contains("selectable-state");
+  const isDropdownOpen = !dropdown.classList.contains("hidden");
 
-  if (e.target.classList.contains("selectable-state")) {
+  if (isSelectableState) {
     const rect = e.target.getBoundingClientRect();
     
-    // Temporarily remove hidden class to measure height
-    dropdown.classList.remove("hidden"); 
+    // FIX 3: If the dropdown is already open and they click the text, close it.
+    if (isDropdownOpen) {
+      dropdown.classList.add("hidden");
+      return;
+    }
+    
+    // Make it visible to get accurate height, then set position
+    dropdown.classList.remove("hidden");
     const dropdownHeight = dropdown.offsetHeight;
     
-    // FIX 3: Dynamic positioning: rect.top (top of the text) - dropdownHeight - 10px (for spacing above the text).
+    // Position 10px above the selectable text
     dropdown.style.top = (rect.top - dropdownHeight - 10) + "px"; 
     dropdown.style.left = rect.left + "px";
-
-    // Toggle back (it's already removed, so this will show/hide correctly)
-    dropdown.classList.toggle("hidden"); 
+    
     return;
   }
 
+  // Hide the dropdown if the click was not on the dropdown itself
   if (!dropdown.contains(e.target)) dropdown.classList.add("hidden");
 });
 
