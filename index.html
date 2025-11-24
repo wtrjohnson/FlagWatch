@@ -230,7 +230,16 @@ document.addEventListener("click", (e) => {
     dropdown.classList.toggle("hidden");
 
     if (!dropdown.classList.contains("hidden")) {
-      dropdown.style.top = rect.bottom + "px";
+      const dropdownHeight = 300; // matches your max-height
+      const spaceBelow = window.innerHeight - rect.bottom;
+
+      // If not enough room below → open ABOVE
+      if (spaceBelow < dropdownHeight + 20) {
+        dropdown.style.top = (rect.top - dropdownHeight - 10) + "px";
+      } else {
+        dropdown.style.top = rect.bottom + "px";
+      }
+
       dropdown.style.left = rect.left + "px";
     }
     return;
@@ -247,6 +256,7 @@ dropdown.addEventListener("click", (e) => {
     loadFlagStatus(e.target.dataset.code, window.loadedSvgDoc);
   }
 });
+
 
 /* ---------------- SVG Initialization ---------------- */
 document.getElementById("skylineSVG").addEventListener("load", () => {
