@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
       font-family: Georgia, serif;
-      background: #fff;
+      background: #f4f5fa; /* <<< CHANGE BACKGROUND COLOR HERE */
       color: #000;
       text-align: center;
       overflow-x: hidden;
@@ -32,7 +32,6 @@
       margin-right: 10px;
     }
 
-    /* SVG container holds the full skyline illustration */
     .svg-container {
       width: 100%;
       position: relative;
@@ -40,14 +39,12 @@
       flex-grow: 1;
     }
 
-    /* Let the SVG scale proportionally across the whole width */
     #skylineSVG {
       width: 100%;
       height: auto;
       display: block;
     }
 
-    /* Status footer */
     footer#statusText {
       font-size: 1.35rem;
       font-weight: bold;
@@ -60,7 +57,6 @@
       color: #444;
     }
 
-    /* State dropdown */
     .selectable-state {
       text-decoration: underline;
       cursor: pointer;
@@ -100,6 +96,13 @@
       display: none;
     }
 
+    /* -------------------------------------- */
+    /* SMOOTH FLAG TRANSITIONS                */
+    /* -------------------------------------- */
+    .flag-anim {
+      transition: y 1.4s ease-in-out;
+    }
+
     @media (max-width: 800px) {
       footer#statusText {
         font-size: 1.1rem;
@@ -116,13 +119,11 @@
   FlagWatch
 </header>
 
-<!-- Responsive SVG Skyline -->
 <div class="svg-container">
   <object id="skylineSVG" data="FlagIcons/skyline.svg" type="image/svg+xml"></object>
 </div>
 
 <footer id="statusText"></footer>
-
 <div id="stateDropdown" class="state-dropdown hidden"></div>
 
 <script>
@@ -169,7 +170,7 @@ async function detectUserState() {
 
 /* ---------------- Main Flag Status Logic ---------------- */
 async function loadFlagStatus(forcedState = null, svgDoc = null) {
-  if (!svgDoc) return; // Wait for SVG to load
+  if (!svgDoc) return;
 
   const userState = await detectUserState();
   const state = (forcedState || userState || "VA").toUpperCase();
@@ -183,23 +184,29 @@ async function loadFlagStatus(forcedState = null, svgDoc = null) {
   const usHalf = national?.half_mast;
   const stateHalf = stateRow?.half_mast;
 
-  /* Access SVG elements */
   const flagUS = svgDoc.getElementById("FlagUS");
   const flagState = svgDoc.getElementById("FlagState");
 
-  /* Update Images */
+  /* Update flag images */
   flagUS.setAttribute("href", "USAFlag.png");
   flagState.setAttribute("href", `${state}Flag.png`);
 
+  /* Mast positions */
+  const FULL = 575;
+  const HALF = 700;
 
-  /* Apply Half-Mast (by adjusting y-position) */
-  const FULL = 600;
-  const HALF = 750;
+  /* --------------------------------------- */
+  /* ALWAYS START FULL-MAST, THEN TRANSITION */
+  /* --------------------------------------- */
+  flagUS.setAttribute("y", FULL);
+  flagState.setAttribute("y", FULL);
 
-  flagUS.setAttribute("y", usHalf ? HALF : FULL);
-  flagState.setAttribute("y", stateHalf ? HALF : FULL);
+  setTimeout(() => {
+    flagUS.setAttribute("y", usHalf ? HALF : FULL);
+    flagState.setAttribute("y", stateHalf ? HALF : FULL);
+  }, 50);
 
-  /* Update Text */
+  /* Update text */
   const footer = document.getElementById("statusText");
   const stateName = stateMapFull[state];
 
@@ -230,10 +237,9 @@ document.addEventListener("click", (e) => {
     dropdown.classList.toggle("hidden");
 
     if (!dropdown.classList.contains("hidden")) {
-      const dropdownHeight = 300; // matches your max-height
+      const dropdownHeight = 300;
       const spaceBelow = window.innerHeight - rect.bottom;
 
-      // If not enough room below → open ABOVE
       if (spaceBelow < dropdownHeight + 20) {
         dropdown.style.top = (rect.top - dropdownHeight - 10) + "px";
       } else {
@@ -250,6 +256,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
+/* ---------------- Handle State Selection ---------------- */
 dropdown.addEventListener("click", (e) => {
   if (e.target.dataset.code && window.loadedSvgDoc) {
     dropdown.classList.add("hidden");
@@ -257,11 +264,18 @@ dropdown.addEventListener("click", (e) => {
   }
 });
 
-
 /* ---------------- SVG Initialization ---------------- */
 document.getElementById("skylineSVG").addEventListener("load", () => {
   const svgDoc = document.getElementById("skylineSVG").contentDocument;
   window.loadedSvgDoc = svgDoc;
+
+  const flagUS = svgDoc.getElementById("FlagUS");
+  const flagState = svgDoc.getElementById("FlagState");
+
+  /* Enable animated transitions */
+  flagUS.classList.add("flag-anim");
+  flagState.classList.add("flag-anim");
+
   loadFlagStatus(null, svgDoc);
 });
 </script>
