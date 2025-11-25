@@ -10,7 +10,7 @@
       margin: 0;
       padding: 0;
       font-family: Georgia, serif;
-      background: #f4f5fa; /* <<< CHANGE BACKGROUND COLOR HERE */
+      background: #fefcf8; /* <<< CHANGE BACKGROUND COLOR HERE */
       color: #000;
       text-align: center;
       overflow-x: hidden;
@@ -32,6 +32,7 @@
       margin-right: 10px;
     }
 
+    /* SVG container holds the full skyline illustration */
     .svg-container {
       width: 100%;
       position: relative;
@@ -39,12 +40,14 @@
       flex-grow: 1;
     }
 
+    /* Let the SVG scale proportionally across the whole width */
     #skylineSVG {
       width: 100%;
       height: auto;
       display: block;
     }
 
+    /* Status footer */
     footer#statusText {
       font-size: 1.35rem;
       font-weight: bold;
@@ -57,6 +60,7 @@
       color: #444;
     }
 
+    /* State dropdown */
     .selectable-state {
       text-decoration: underline;
       cursor: pointer;
@@ -96,13 +100,6 @@
       display: none;
     }
 
-    /* -------------------------------------- */
-    /* SMOOTH FLAG TRANSITIONS                */
-    /* -------------------------------------- */
-    .flag-anim {
-      transition: y 1.4s ease-in-out;
-    }
-
     @media (max-width: 800px) {
       footer#statusText {
         font-size: 1.1rem;
@@ -119,11 +116,13 @@
   FlagWatch
 </header>
 
+<!-- Responsive SVG Skyline -->
 <div class="svg-container">
   <object id="skylineSVG" data="FlagIcons/skyline.svg" type="image/svg+xml"></object>
 </div>
 
 <footer id="statusText"></footer>
+
 <div id="stateDropdown" class="state-dropdown hidden"></div>
 
 <script>
@@ -168,9 +167,51 @@ async function detectUserState() {
   }
 }
 
+/* ---------------- Flag Animation Helper ---------------- */
+/**
+ * Smoothly animate the SVG image's y attribute from current to target.
+ */
+function animateFlagY(element, targetY, duration = 1200) {
+  if (!element) return;
+
+  // Cancel any existing animation on this element
+  if (element._animFrame) {
+    cancelAnimationFrame(element._animFrame);
+  }
+
+  const startYAttr = element.getAttribute("y");
+  const startY = startYAttr !== null ? parseFloat(startYAttr) : targetY;
+  const delta = targetY - startY;
+  const startTime = performance.now();
+
+  function easeInOut(t) {
+    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+  }
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const t = Math.min(elapsed / duration, 1);
+    const eased = easeInOut(t);
+    const newY = startY + delta * eased;
+    element.setAttribute("y", newY);
+
+    if (t < 1) {
+      element._animFrame = requestAnimationFrame(step);
+    } else {
+      element.setAttribute("y", targetY); // snap exactly at end
+      element._animFrame = null;
+    }
+  }
+
+  element._animFrame = requestAnimationFrame(step);
+}
+
+/* Track whether we've done the very first initialization */
+window.flagsInitialized = false;
+
 /* ---------------- Main Flag Status Logic ---------------- */
 async function loadFlagStatus(forcedState = null, svgDoc = null) {
-  if (!svgDoc) return;
+  if (!svgDoc) return; // Wait for SVG to load
 
   const userState = await detectUserState();
   const state = (forcedState || userState || "VA").toUpperCase();
@@ -184,29 +225,33 @@ async function loadFlagStatus(forcedState = null, svgDoc = null) {
   const usHalf = national?.half_mast;
   const stateHalf = stateRow?.half_mast;
 
+  /* Access SVG elements */
   const flagUS = svgDoc.getElementById("FlagUS");
   const flagState = svgDoc.getElementById("FlagState");
 
-  /* Update flag images */
+  /* Update Images */
   flagUS.setAttribute("href", "USAFlag.png");
   flagState.setAttribute("href", `${state}Flag.png`);
 
-  /* Mast positions */
-  const FULL = 575;
+  /* Mast positions — adjust these numbers to fit your SVG */
+  const FULL = 400;
   const HALF = 700;
 
-  /* --------------------------------------- */
-  /* ALWAYS START FULL-MAST, THEN TRANSITION */
-  /* --------------------------------------- */
-  flagUS.setAttribute("y", FULL);
-  flagState.setAttribute("y", FULL);
+  const targetUS = usHalf ? HALF : FULL;
+  const targetState = stateHalf ? HALF : FULL;
 
-  setTimeout(() => {
-    flagUS.setAttribute("y", usHalf ? HALF : FULL);
-    flagState.setAttribute("y", stateHalf ? HALF : FULL);
-  }, 50);
+  // On the very first run: force both to full mast, then animate down if needed
+  if (!window.flagsInitialized) {
+    flagUS.setAttribute("y", FULL);
+    flagState.setAttribute("y", FULL);
+    window.flagsInitialized = true;
+  }
 
-  /* Update text */
+  // Animate from current y position to target y
+  animateFlagY(flagUS, targetUS, 1200);
+  animateFlagY(flagState, targetState, 1200);
+
+  /* Update Text */
   const footer = document.getElementById("statusText");
   const stateName = stateMapFull[state];
 
@@ -237,9 +282,10 @@ document.addEventListener("click", (e) => {
     dropdown.classList.toggle("hidden");
 
     if (!dropdown.classList.contains("hidden")) {
-      const dropdownHeight = 300;
+      const dropdownHeight = 300; // matches your max-height
       const spaceBelow = window.innerHeight - rect.bottom;
 
+      // If not enough room below → open ABOVE
       if (spaceBelow < dropdownHeight + 20) {
         dropdown.style.top = (rect.top - dropdownHeight - 10) + "px";
       } else {
@@ -256,7 +302,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-/* ---------------- Handle State Selection ---------------- */
 dropdown.addEventListener("click", (e) => {
   if (e.target.dataset.code && window.loadedSvgDoc) {
     dropdown.classList.add("hidden");
@@ -269,13 +314,7 @@ document.getElementById("skylineSVG").addEventListener("load", () => {
   const svgDoc = document.getElementById("skylineSVG").contentDocument;
   window.loadedSvgDoc = svgDoc;
 
-  const flagUS = svgDoc.getElementById("FlagUS");
-  const flagState = svgDoc.getElementById("FlagState");
-
-  /* Enable animated transitions */
-  flagUS.classList.add("flag-anim");
-  flagState.classList.add("flag-anim");
-
+  // No CSS transitions needed; animation is handled entirely in JS
   loadFlagStatus(null, svgDoc);
 });
 </script>
