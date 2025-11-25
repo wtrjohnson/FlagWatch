@@ -193,8 +193,8 @@ async function loadFlagStatus(forcedState = null, svgDoc = null) {
 
 
   /* Apply Half-Mast (by adjusting y-position) */
-  const FULL = 775;
-  const HALF = 905;
+  const FULL = 600;
+  const HALF = 750;
 
   flagUS.setAttribute("y", usHalf ? HALF : FULL);
   flagState.setAttribute("y", stateHalf ? HALF : FULL);
