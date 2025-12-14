@@ -1,323 +1,707 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FlagWatch</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE MAST | Telemetry V8</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <link href="https://api.fontshare.com/v2/css?f[]=satoshi@900,700,500&f[]=general-sans@500,600&f[]=azeret-mono@100,300,400,500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --neon: #D2FF00;
+            --void: #050505;
+            --off-white: #EAEAEA;
+            --metal-highlight: rgba(255, 255, 255, 0.4);
+            --metal-shadow: rgba(0, 0, 0, 0.8);
+            --us-red: #B22234;
+            --us-blue: #3C3B6E;
+        }
+        
+        body {
+            background-color: var(--void);
+            color: var(--off-white);
+            font-family: 'Satoshi', sans-serif;
+            overflow-x: hidden;
+            cursor: none;
+        }
 
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Georgia, serif;
-      background: #fefcf8; /* <<< CHANGE BACKGROUND COLOR HERE */
-      color: #000;
-      text-align: center;
-      overflow-x: hidden;
-      display: flex;
-      flex-direction: column;
-    }
+        /* --- UI UTILS --- */
+        .mono { font-family: 'Azeret Mono', monospace; }
+        
+        /* Cursor */
+        .cursor-dot { 
+            width: 6px; 
+            height: 6px; 
+            background: var(--neon); 
+            position: fixed; 
+            border-radius: 50%; 
+            pointer-events: none; 
+            z-index: 9999; 
+        }
+        .cursor-outline { 
+            width: 30px; 
+            height: 30px; 
+            border: 1px solid var(--neon); 
+            position: fixed; 
+            border-radius: 50%; 
+            pointer-events: none; 
+            z-index: 9998; 
+            transition: transform 0.15s ease-out; 
+            box-shadow: 0 0 12px rgba(210, 255, 0, 0.4);
+        }
+        
+        .noise-overlay {
+            position: fixed; inset: 0; pointer-events: none; z-index: 900;
+            background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PHZlVHVyYmVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPjwvcmVnPg==');
+            opacity: 0.3;
+        }
 
-    header {
-      display: flex;
-      align-items: center;
-      padding: 20px 40px;
-      font-weight: bold;
-      font-size: 1.4rem;
-      z-index: 10;
-    }
+        /* BOOT SEQUENCE OVERLAY (REMOVED) */
+        
+        /* MAIN CONTENT: Now visible by default */
+        #content-wrapper {
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 1s ease;
+        }
 
-    header img {
-      height: 22px;
-      margin-right: 10px;
-    }
+        /* --- DEPTH / LIGHTING BEHIND MAST --- */
+        .mast-light {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 320px;
+            height: 480px;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(210,255,0,0.18) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+            animation: glowPulse 6s ease-in-out infinite;
+        }
 
-    /* SVG container holds the full skyline illustration */
-    .svg-container {
-      width: 100%;
-      position: relative;
-      z-index: 1;
-      flex-grow: 1;
-    }
+        .mast-fog {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 380px;
+            height: 380px;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%);
+            filter: blur(40px);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-    /* Let the SVG scale proportionally across the whole width */
-    #skylineSVG {
-      width: 100%;
-      height: auto;
-      display: block;
-    }
+        @keyframes glowPulse {
+            0% { opacity: 0.18; }
+            50% { opacity: 0.32; }
+            100% { opacity: 0.18; }
+        }
 
-    /* Status footer */
-    footer#statusText {
-      font-size: 1.35rem;
-      font-weight: bold;
-      margin: 30px 0 40px 0;
-      z-index: 20;
-      padding: 0 10px;
-    }
+        /* --- THE MAST SYSTEM --- */
+        .mast-structure {
+            width: 12px; height: 100%; position: absolute; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(90deg, #2a2a2a 0%, #555 20%, #888 45%, #999 50%, #888 55%, #555 80%, #2a2a2a 100%);
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8); z-index: 20;
+        }
+        .mast-finial {
+            position: absolute; 
+            top: -15px; 
+            left: 50%; 
+            transform: translateX(-50%); 
+            width: 24px; 
+            height: 24px;
+            border-radius: 50%; 
+            background: radial-gradient(circle at 30% 30%, #fff, #b8b8b8, #4a4a4a);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); 
+            z-index: 20;
+        }
+        .mast-halyard {
+            position: absolute; left: 50%; top: 0; height: 100%; width: 2px;
+            background: rgba(255,255,255,0.3); transform: translateX(8px); z-index: 20; pointer-events: none;
+        }
+        .flag-group {
+            position: absolute; left: 50%; perspective: 1000px; transform-style: preserve-3d;
+            /* Flag Z-index set low (9) */
+            z-index: 9; 
+            pointer-events: none;
+        }
+        .flag {
+            width: 280px; height: 175px; position: relative; transform-origin: left center;
+            animation: wave 5s ease-in-out infinite alternate;
+            box-shadow: 20px 20px 50px rgba(0,0,0,0.6); border-left: 4px solid white;
+        }
+        .grommet {
+            position: absolute; left: -4px; width: 10px; height: 10px; border: 2px solid #ccc;
+            border-radius: 50%; background: transparent; z-index: 25;
+        }
+        .grommet.top { top: 5px; }
+        .grommet.bottom { bottom: 5px; }
 
-    footer#statusText em {
-      color: #444;
-    }
+        @keyframes wave {
+            0% { transform: rotateY(0deg) skewY(0deg) translateX(6px); }
+            50% { transform: rotateY(20deg) skewY(2deg) translateX(6px); }
+            100% { transform: rotateY(5deg) skewY(-2deg) translateX(6px); }
+        }
 
-    /* State dropdown */
-    .selectable-state {
-      text-decoration: underline;
-      cursor: pointer;
-      font-weight: bold;
-    }
+        /* --- FLAG VARIANTS --- */
+        .us-flag {
+            background: white;
+            background-image: repeating-linear-gradient(180deg, var(--us-red), var(--us-red) 13.4px, white 13.4px, white 26.9px);
+        }
+        .us-canton { position: absolute; top: 0; left: 0; width: 45%; height: 53.8%; background: var(--us-blue); }
 
-    .state-dropdown {
-      position: fixed;
-      background: #fff;
-      border: 2px solid #000;
-      padding: 12px;
-      width: 260px;
-      max-height: 300px;
-      overflow-y: auto;
-      z-index: 9999;
-      font-family: Georgia, serif;
-      font-size: 1.1rem;
-      text-align: left;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    }
+        /* State Styles (Dynamic Classes) */
+        .state-flag-blue { background: #002664; display: flex; align-items: center; justify-content: center; }
+        .state-flag-white { background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc;}
+        .state-flag-texas { background: white; }
+        
+        .state-seal { width: 70px; height: 70px; border-radius: 50%; background: white; border: 4px solid #C4A900; opacity: 0.9; }
+        
+        /* Texas Special */
+        .state-flag-texas .tx-blue { position: absolute; left: 0; top: 0; bottom: 0; width: 33%; background: #002868; }
+        .state-flag-texas .tx-top { position: absolute; left: 33%; top: 0; right: 0; height: 50%; background: white; }
+        .state-flag-texas .tx-bot { position: absolute; left: 33%; top: 50%; right: 0; height: 50%; background: #BF0A30; }
 
-    .state-dropdown div {
-      padding: 6px 4px;
-      cursor: pointer;
-      border-bottom: 1px solid #ccc;
-    }
 
-    .state-dropdown div:last-child {
-      border-bottom: none;
-    }
+        /* --- OVERLAY SYSTEM --- */
+        /* Make sure selector is initially hidden */
+        #state-selector {
+            pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
+        }
+        #state-selector.active {
+            pointer-events: all; opacity: 1;
+        }
 
-    .state-dropdown div:hover {
-      background: #eee;
-    }
+        /* --- SPLIT PANE INTERACTION --- */
+        .split-pane { transition: filter 0.5s ease, opacity 0.5s ease; }
+        
+        /* Default state when the wrapper is hovered (i.e., when no split-pane or center divider is specifically hovered) */
+        .wrapper:hover .split-pane { opacity: 0.4; filter: grayscale(100%) blur(3px); }
+        
+        /* State when a specific split-pane is hovered */
+        .wrapper .split-pane:hover { opacity: 1; filter: grayscale(0%) blur(0px); z-index: 10; }
 
-    .hidden {
-      display: none;
-    }
+        /* State when the center divider is hovered (CSS only trigger for visualization) */
+        .center-divider:hover + .split-pane,
+        .center-divider:hover ~ .split-pane { 
+            opacity: 1; 
+            filter: grayscale(0%) blur(0px); 
+        }
 
-    @media (max-width: 800px) {
-      footer#statusText {
-        font-size: 1.1rem;
-        margin-top: 20px;
-      }
-    }
-  </style>
+        .status-badge {
+            display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
+            border: 1px solid rgba(255,255,255,0.1); font-size: 10px; letter-spacing: 0.1em;
+            text-transform: uppercase; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+        }
+        .status-dot { width: 6px; height: 6px; border-radius: 50%; }
+        /* Unified status colors: Green for Full Staff, Red for Half Staff */
+        .status-dot.green { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
+        .status-dot.red { background: #FF2E00; box-shadow: 0 0 10px #FF2E00; }
+        
+        /* Custom Scrollbar for list */
+        .scroller::-webkit-scrollbar { width: 4px; }
+        .scroller::-webkit-scrollbar-track { background: #111; }
+        .scroller::-webkit-scrollbar-thumb { background: #333; }
+        .scroller::-webkit-scrollbar-thumb:hover { background: var(--neon); }
+
+        .hover-trigger:hover {
+            background-color: rgba(210, 255, 0, 0.1);
+            color: var(--neon);
+            border-color: var(--neon);
+        }
+
+        .state-info-panel {
+            /* CRITICAL FIX: Set a high z-index (50) and explicitly set position to ensure it stacks above the flag (9) */
+            position: relative;
+            z-index: 50; 
+            /* Added background to ensure the flag is fully obscured when it passes behind */
+            background: #000000; 
+	    width: 100%;
+        }
+
+        /* Bottom ticker always above everything else */
+        .ticker-bar {
+            z-index: 100;
+        }
+
+        /* New class for when the center is hovered (applied via JS) */
+        .center-hover-active .split-pane {
+             opacity: 1 !important; 
+             filter: grayscale(0%) blur(0px) !important; 
+        }
+    </style>
 </head>
+<body class="selection:bg-[#D2FF00] selection:text-black">
+    <div id="content-wrapper">
+        <div class="cursor-dot"></div>
+        <div class="cursor-outline"></div>
+        <div class="noise-overlay"></div>
 
-<body>
+        <nav class="fixed top-0 w-full z-50 px-6 py-5 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-md">
+            <div class="text-lg font-bold tracking-tighter flex items-center gap-2">
+                <div class="w-2 h-2 bg-[#D2FF00]"></div> THE MAST
+            </div>
+            <div class="hidden md:flex gap-6 mono text-[10px] text-gray-400">
+                <span>SYS: ONLINE</span>
+                <span>UPDATED: <span id="time-display">--:-- EST</span></span> 
+            </div>
+            <div class="mono text-[10px] border border-white/20 px-3 py-1 hover:bg-[#D2FF00] hover:text-black hover:border-[#D2FF00] transition-colors cursor-none">MENU //</div>
+        </nav>
 
-<header>
-  <img src="FlagIcons/USAFlag.png" alt="Flag Icon">
-  FlagWatch
-</header>
+        <main class="wrapper w-full h-screen flex flex-col md:flex-row pt-16 relative" id="main-wrapper">
+            
+            <div class="absolute left-1/2 top-0 bottom-0 w-[1px] bg-white/10 transform -translate-x-1/2 hidden md:block z-0"></div>
 
-<!-- Responsive SVG Skyline -->
-<div class="svg-container">
-  <object id="skylineSVG" data="FlagIcons/skyline.svg" type="image/svg+xml"></object>
-</div>
+            <div id="center-divider" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[100px] w-[100px] hidden md:block z-40 cursor-pointer">
+                <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black border border-white/20 p-2 rotate-45">
+                    <div class="w-2 h-2 bg-[#D2FF00]"></div>
+                </div>
+            </div>
 
-<footer id="statusText"></footer>
+            <section class="split-pane relative w-full md:w-1/2 h-full border-r border-white/5 flex flex-col items-center justify-center group overflow-hidden">
+                <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"></div>
 
-<div id="stateDropdown" class="state-dropdown hidden"></div>
+                <div class="relative z-30 w-full h-full flex flex-col justify-between p-12">
+                    <div class="flex justify-between items-start opacity-0 animate-in">
+                        <div>
+                            <div class="mono text-xs text-gray-500 mb-1">JURISDICTION</div>
+                            <h2 class="text-3xl font-bold tracking-tight">UNITED STATES</h2>
+                        </div>
+                        <div class="status-badge"><div class="status-dot green"></div> FULL STAFF</div>
+                    </div>
 
-<script>
-/* ---------------- State Map ---------------- */
-const stateMapFull = {
-  AL: "Alabama", AK: "Alaska", AZ: "Arizona", AR: "Arkansas",
-  CA: "California", CO: "Colorado", CT: "Connecticut", DE: "Delaware",
-  FL: "Florida", GA: "Georgia", HI: "Hawaii", ID: "Idaho", IL: "Illinois",
-  IN: "Indiana", IA: "Iowa", KS: "Kansas", KY: "Kentucky", LA: "Louisiana",
-  ME: "Maine", MD: "Maryland", MA: "Massachusetts", MI: "Michigan",
-  MN: "Minnesota", MS: "Mississippi", MO: "Missouri", MT: "Montana",
-  NE: "Nebraska", NV: "Nevada", NH: "New Hampshire", NJ: "New Jersey",
-  NM: "New Mexico", NY: "New York", NC: "North Carolina", ND: "North Dakota",
-  OH: "Ohio", OK: "Oklahoma", OR: "Oregon", PA: "Pennsylvania",
-  RI: "Rhode Island", SC: "South Carolina", SD: "South Dakota",
-  TN: "Tennessee", TX: "Texas", UT: "Utah", VT: "Vermont",
-  VA: "Virginia", WA: "Washington", WV: "West Virginia",
-  WI: "Wisconsin", WY: "Wyoming", DC: "District of Columbia"
-};
+                    <div class="flex-grow flex items-center justify-center relative my-8">
+                        <div class="relative h-[500px] w-20 flex justify-center z-0">
+                            <div class="mast-light"></div>
+                            <div class="mast-fog"></div>
 
-/* ---------------- Dropdown ---------------- */
-const dropdown = document.getElementById("stateDropdown");
-dropdown.innerHTML = Object.entries(stateMapFull)
-  .map(([code, name]) => `<div data-code="${code}">${name}</div>`)
-  .join("");
+                            <div class="mast-structure"><div class="mast-finial"></div></div>
+                            <div class="mast-halyard"></div>
+                            <div class="flag-group" id="us-flag-wrapper">
+                                <div class="flag us-flag">
+                                    <div class="us-canton"></div>
+                                    <div class="grommet top"></div><div class="grommet bottom"></div>
+                                    <div class="absolute inset-0 bg-gradient-to-tr from-black/30 to-transparent"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-/* ---------------- Detect User State ---------------- */
-async function detectUserState() {
-  try {
-    const res = await fetch("https://ipinfo.io/json?token=c0053c34b2bf22");
-    const info = await res.json();
+                    <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-6 opacity-0 animate-in state-info-panel">
+                        <div>
+                            <div class="mono text-[10px] text-gray-500">LAST ORDER</div>
+                            <div class="text-sm">None Active</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="mono text-[10px] text-gray-500">PROTOCOLS</div>
+                            <div class="text-sm text-[#D2FF00]">Standard</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-    if (info.region_code) return info.region_code.toUpperCase();
 
-    const region = (info.region || "").toUpperCase();
-    const found = Object.keys(stateMapFull).find(
-      abbr => stateMapFull[abbr].toUpperCase() === region
-    );
-    return found || null;
-  } catch {
-    return null;
-  }
-}
+            <section class="split-pane relative w-full md:w-1/2 h-full flex flex-col items-center justify-center group overflow-hidden bg-[#080808]">
+                <div class="absolute top-1/2 right-0 w-[400px] h-[400px] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none"></div>
 
-/* ---------------- Flag Animation Helper ---------------- */
-/**
- * Smoothly animate the SVG image's y attribute from current to target.
- */
-function animateFlagY(element, targetY, duration = 1200) {
-  if (!element) return;
+                <div class="relative z-30 w-full h-full flex flex-col justify-between p-12">
+                    <div class="flex justify-between items-start opacity-0 animate-in w-full">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 cursor-pointer hover:text-[#D2FF00] transition-colors hover-trigger" onclick="toggleStateSelector()">
+                                <span class="mono text-xs text-gray-500">TARGET: <span id="state-code">--</span></span>
+                                <span class="text-[10px] bg-white/10 px-1 rounded text-[#D2FF00]">CHANGE ▼</span>
+                            </div>
+                            <h2 class="text-3xl font-bold tracking-tight" id="state-name">LOADING...</h2>
+                        </div>
+                        <div class="status-badge border-gray-600/50 bg-gray-900/10" id="state-badge">
+                            <div class="status-dot" style="background:#555; box-shadow:0 0 5px #555;"></div> INIT...
+                        </div>
+                    </div>
 
-  // Cancel any existing animation on this element
-  if (element._animFrame) {
-    cancelAnimationFrame(element._animFrame);
-  }
+                    <div class="flex-grow flex items-center justify-center relative my-8">
+                        <div class="relative h-[500px] w-20 flex justify-center z-0">
+                            <div class="mast-light"></div>
+                            <div class="mast-fog"></div>
 
-  const startYAttr = element.getAttribute("y");
-  const startY = startYAttr !== null ? parseFloat(startYAttr) : targetY;
-  const delta = targetY - startY;
-  const startTime = performance.now();
+                            <div class="mast-structure"><div class="mast-finial"></div></div>
+                            <div class="mast-halyard"></div>
 
-  function easeInOut(t) {
-    return t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-  }
+                            <div class="flag-group" id="state-flag-wrapper">
+                                </div>
+                        </div>
+                    </div>
 
-  function step(now) {
-    const elapsed = now - startTime;
-    const t = Math.min(elapsed / duration, 1);
-    const eased = easeInOut(t);
-    const newY = startY + delta * eased;
-    element.setAttribute("y", newY);
+                    <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-6 opacity-0 animate-in state-info-panel">
+                        <div>
+                            <div class="mono text-[10px] text-gray-500">REASONING</div>
+                            <div class="text-sm max-w-[200px] leading-tight" id="state-reason">--</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="mono text-[10px] text-gray-500">DURATION</div>
+                            <div class="text-sm text-gray-400" id="state-duration">--</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-    if (t < 1) {
-      element._animFrame = requestAnimationFrame(step);
-    } else {
-      element.setAttribute("y", targetY); // snap exactly at end
-      element._animFrame = null;
-    }
-  }
+        </main>
 
-  element._animFrame = requestAnimationFrame(step);
-}
+        <div id="state-selector" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-lg flex items-center justify-center">
+            <div class="w-full max-w-4xl h-[80vh] bg-[#0A0A0A] border border-white/10 flex flex-col relative overflow-hidden">
+                <button onclick="toggleStateSelector()" class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center border border-white/20 hover:bg-white/20 text-white mono">X</button>
+                
+                <div class="p-8 border-b border-white/10">
+                    <h2 class="text-4xl font-bold mb-2">SELECT JURISDICTION</h2>
+                    <p class="mono text-xs text-gray-500">ACCESSING FEDERAL DATABASE... SELECT TARGET FOR TELEMETRY.</p>
+                </div>
 
-/* Track whether we've done the very first initialization */
-window.flagsInitialized = false;
+                <div class="flex-grow overflow-y-auto p-8 scroller">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="state-grid">
+                    </div>
+                </div>
+            </div>
+        </div>
 
-/* ---------------- Main Flag Status Logic ---------------- */
-async function loadFlagStatus(forcedState = null, svgDoc = null) {
-  if (!svgDoc) return; // Wait for SVG to load
+        <div class="fixed bottom-0 w-full bg-[#D2FF00] text-black py-2 overflow-hidden border-t border-black ticker-bar">
+            <div class="whitespace-nowrap flex gap-16 animate-[scroll_20s_linear_infinite] mono text-xs font-bold uppercase">
+                <span>/// Live Telemetry Feed</span>
+                <span>/// National Status: Green</span>
+                <span>/// Data Integrity: Nominal</span>
+                <span>/// State Status: Monitoring (<span id="ticker-state-code">--</span>)</span>
+                <span>/// Live Clock: <span id="ticker-time">--:--</span> EST</span>
+                <span>/// Current State Order: INIT...</span>
+                <span>/// Verify all protocols locally</span>
+            </div>
+        </div>
+    </div>
 
-  const userState = await detectUserState();
-  const state = (forcedState || userState || "VA").toUpperCase();
+    <script>
+        // --- DATA SOURCE ---
+        // 1. API endpoint setup for Netlify Functions
+        const API_BASE_URL = '/.netlify/functions';
+        
+        // 2. State data will be loaded here from the API
+        let statesData = []; 
+        
+        let currentState = null; 
+        let lastSelectionTime = "--:-- EST"; 
 
-  const res = await fetch(`/.netlify/functions/getFlagStatus?state=${state}`);
-  const data = await res.json();
+        // --- BOOT SEQUENCE LOGIC (from original file) ---
+        const bootMessages = [
+            "INITIATING THE MAST TELEMETRY V8.0.1...",
+            "SYSTEM CHECK: CPU/GPU CLOCK SPEED 100%",
+            "NETWORK: ESTABLISHING SECURE CONNECTION...",
+            "DB: PINGING NEON POSTGRESQL INSTANCE...",
+            "DB: CONNECTION ESTABLISHED. SSL ENCRYPTED.",
+            "PROTOCOL: LOADING US FEDERAL HALF-MAST STATUS...",
+            "STATUS: US NATIONAL FLAG IS CURRENTLY FULL STAFF.",
+        ];
+        
+        const bootCursor = document.getElementById('boot-cursor');
+        
+        function runBootSequence() {
+            let delay = 0;
+            bootCursor.classList.remove('opacity-0'); // Show cursor
+            
+            bootMessages.forEach((msg) => {
+                delay += 0.8; 
+                gsap.to(bootCursor, { duration: 0.1, delay: delay, onComplete: () => bootOutput(msg) });
+            });
 
-  const national = data.find(r => r.state_code === null);
-  const stateRow = data.find(r => (r.state_code || "").toUpperCase() === state);
+            // Start the heavy lifting (API fetch, Geolocation) after the initial messages
+            delay += 1;
+            gsap.to({}, { 
+                duration: 0.1, 
+                delay: delay, 
+                onComplete: () => loadInitialState(() => {
+                    // Final steps after initial state is loaded
+                    bootOutput("BOOT SEQUENCE COMPLETE. WELCOME TO TELEMETRY.");
+                    gsap.to(bootCursor, { opacity: 0, duration: 0.5 });
+                    gsap.to("#boot-screen", { 
+                        opacity: 0, 
+                        duration: 1, 
+                        delay: 1, 
+                        onComplete: () => {
+                            document.getElementById('boot-screen').style.display = 'none';
+                            document.getElementById('content-wrapper').style.visibility = 'visible';
+                            gsap.to("#content-wrapper", { opacity: 1, duration: 1 });
+                            // Start application loops and final animations
+                            initializeAppVisuals();
+                        }
+                    });
+                })
+            });
+        }
+        
+        // Helper function to append a line to the boot output
+        function bootOutput(text) {
+            const output = document.getElementById('boot-output');
+            const el = document.createElement('div');
+            el.className = "boot-line mono text-sm";
+            el.innerText = text;
+            output.appendChild(el);
+            output.scrollTop = output.scrollHeight;
+            gsap.fromTo(el, { opacity: 0, y: 5 }, { opacity: 1, y: 0, duration: 0.3 });
+            return el;
+        }
 
-  const usHalf = national?.half_mast;
-  const stateHalf = stateRow?.half_mast;
+        // --- 1. POPULATE SELECTOR ---
+        const grid = document.getElementById('state-grid');
+        
+        function populateStateSelector() {
+            // Ensure grid is clear before populating
+            grid.innerHTML = '';
+            
+            statesData.forEach(state => {
+                const el = document.createElement('div');
+                el.className = "hover-trigger border border-white/10 p-4 cursor-pointer transition-all flex justify-between items-center group";
+                el.innerHTML = `
+                    <div>
+                        <div class="mono text-xs text-gray-500 group-hover:text-[#D2FF00]">${state.code}</div>
+                        <div class="font-bold text-lg">${state.name}</div>
+                    </div>
+                    <div class="mono text-[10px] ${state.status === 'HALF' ? 'text-red-500' : 'text-[#D2FF00]'}">
+                        ${state.status} STAFF
+                    </div>
+                `;
+                el.onclick = () => selectState(state);
+                grid.appendChild(el);
+            });
+        }
+        
+        // --- 2. INTERACTION LOGIC ---
+        
+        function toggleStateSelector() {
+            const modal = document.getElementById('state-selector');
+            modal.classList.toggle('active');
+        }
 
-  /* Access SVG elements */
-  const flagUS = svgDoc.getElementById("FlagUS");
-  const flagState = svgDoc.getElementById("FlagState");
+        function selectState(state, isInitialLoad = false) {
+            // Update global state tracking
+            currentState = state; 
+            
+            // --- LOGIC: Capture and display selection time for NAV bar ---
+            const now = new Date();
+            lastSelectionTime = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) + " EST";
+            document.getElementById('time-display').textContent = lastSelectionTime;
+            // ---------------------------------------------------------------------
 
-  /* Update Images */
-  flagUS.setAttribute("href", "USAFlag.png");
-  flagState.setAttribute("href", `${state}Flag.png`);
+            const modal = document.getElementById('state-selector');
+            if (modal.classList.contains('active')) {
+                toggleStateSelector();
+            }
 
-  /* Mast positions — adjust these numbers to fit your SVG */
-  const FULL = 400;
-  const HALF = 700;
+            const flagVis = document.getElementById('state-flag-visual');
+            const shouldAnimate = flagVis && !isInitialLoad;
 
-  const targetUS = usHalf ? HALF : FULL;
-  const targetState = stateHalf ? HALF : FULL;
+            if (!shouldAnimate) {
+                updateStateVisuals(state);
+                updateTicker();
+                const targetY = state.status === 'HALF' ? 160 : 20;
+                gsap.fromTo("#state-flag-wrapper", 
+                    { y: 300, opacity: 0, rotateX: 45 },
+                    { y: targetY, opacity: 1, rotateX: 0, duration: 3, ease: "elastic.out(1, 0.9)" }
+                );
+            } else {
+                gsap.to("#state-flag-wrapper", {
+                    y: 500, // Drop down off screen
+                    opacity: 0,
+                    duration: 1,
+                    ease: "power2.in",
+                    onComplete: () => {
+                        updateStateVisuals(state);
+                        updateTicker(); // Update ticker after state change
+                        const targetY = state.status === 'HALF' ? 160 : 20;
+                        gsap.fromTo("#state-flag-wrapper", 
+                            { y: 500, opacity: 0 },
+                            { y: targetY, opacity: 1, duration: 2.5, ease: "elastic.out(1, 0.75)" }
+                        );
+                    }
+                });
+            }
+        }
 
-  // On the very first run: force both to full mast, then animate down if needed
-  if (!window.flagsInitialized) {
-    flagUS.setAttribute("y", FULL);
-    flagState.setAttribute("y", FULL);
-    window.flagsInitialized = true;
-  }
+        /**
+         * @description Updates the visual display for the selected state flag and info.
+         * Now uses an <img> tag pointing to the FlagIcons/{CODE}.svg file.
+         * @param {object} state - The state data object.
+         */
+        function updateStateVisuals(state) {
+            // Update Text
+            document.getElementById('state-name').innerText = state.name;
+            document.getElementById('state-code').innerText = state.code;
+            document.getElementById('state-reason').innerText = state.reason;
+            document.getElementById('state-duration').innerText = state.duration;
 
-  // Animate from current y position to target y
-  animateFlagY(flagUS, targetUS, 1200);
-  animateFlagY(flagState, targetState, 1200);
+            // Update Badge (Uses unified Green/Red logic)
+            const badge = document.getElementById('state-badge');
+            if(state.status === 'HALF') {
+                badge.className = "status-badge border-red-900/50 bg-red-900/10";
+                badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
+                document.getElementById('state-duration').className = "text-sm text-red-400";
+            } else {
+                badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
+                badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
+                document.getElementById('state-duration').className = "text-sm text-[#D2FF00]";
+            }
 
-  /* Update Text */
-  const footer = document.getElementById("statusText");
-  const stateName = stateMapFull[state];
+            // Update Flag Visual Style using the image file
+            const flagWrapper = document.getElementById('state-flag-wrapper');
+            let flagVis = document.getElementById('state-flag-visual');
+            // Assuming .svg format as advised. Change to .png if necessary.
+            const imagePath = `FlagIcons/${state.code}.svg`; 
 
-  if (usHalf && stateHalf) {
-    const reason = stateRow?.reason || national?.reason || "an active proclamation";
-    footer.innerHTML =
-      `United States and <span class="selectable-state">${stateName}</span> flags are at half mast for ${reason}.`;
-  } else if (!usHalf && stateHalf) {
-    footer.innerHTML =
-      `United States flags are not at half mast<br>
-       <span class="selectable-state">${stateName}</span> flags are at half mast.`;
-  } else if (usHalf && !stateHalf) {
-    footer.innerHTML =
-      `United States flags are at half mast<br>
-       <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
-  } else {
-    footer.innerHTML =
-      `United States and <span class="selectable-state">${stateName}</span> flags are not at half mast.`;
-  }
-}
+            if (!flagVis) {
+                flagVis = document.createElement('div');
+                flagVis.id = 'state-flag-visual';
+                // Apply the necessary classes for the flag container
+                flagVis.className = "flag"; 
+                flagWrapper.appendChild(flagVis);
+            } else {
+                flagVis.className = "flag";
+            }
+            
+            // Populate with the image, grommets, and shadow overlay
+            flagVis.innerHTML = `
+                <img src="${imagePath}" alt="${state.name} Flag" onerror="this.onerror=null;this.src='FlagIcons/default.svg';" class="w-full h-full object-cover">
+                <div class="grommet top"></div>
+                <div class="grommet bottom"></div>
+                <div class="absolute inset-0 bg-gradient-to-tr from-black/30 to-transparent"></div>
+            `;
+        }
 
-/* ---------------- Dropdown Interaction ---------------- */
-document.addEventListener("click", (e) => {
-  const isSelectable = e.target.classList.contains("selectable-state");
+        // --- 3. INITIALIZATION & GLOBALS ---
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            // Only update Ticker time (live clock)
+            document.getElementById('ticker-time').textContent = timeString;
+        }
+        
+        function updateTicker() {
+            if (!currentState) return;
+            const tickerWrapper = document.querySelector('.ticker-bar .whitespace-nowrap');
+            if (!tickerWrapper) return;
 
-  if (isSelectable) {
-    const rect = e.target.getBoundingClientRect();
-    dropdown.classList.toggle("hidden");
+            document.getElementById('ticker-state-code').textContent = currentState.code;
+            const stateOrderSpan = Array.from(tickerWrapper.querySelectorAll('span')).find(span => span.textContent.includes('Current State Order'));
+            if (stateOrderSpan) {
+                stateOrderSpan.innerHTML = `/// Current State Order: ${currentState.status} STAFF`;
+            }
+        }
+        
+        // New async function to fetch data and handle initial state selection
+        async function loadInitialState(onComplete) {
+            
+            // Fetch all states from the API
+            bootOutput("FETCHING STATE PROTOCOLS...");
+            try {
+                const response = await fetch(`${API_BASE_URL}/getAllStates`); 
+                if (!response.ok) {
+                    throw new Error(`API fetch failed with status: ${response.status}`);
+                }
+                statesData = await response.json(); 
+                populateStateSelector(); 
+            } catch (error) {
+                console.error("Error fetching state data:", error);
+                bootOutput(`DATABASE OFFLINE: FALLING BACK TO STATIC. Error: ${error.message.split(':')[0]}`);
+                // FALLBACK for development/offline mode
+                statesData = [
+                    { code: "VA", name: "VIRGINIA", status: "HALF", reason: "Fallen Trooper", duration: "Until Sunset" },
+                    { code: "TX", name: "TEXAS", status: "FULL", reason: "No active orders", duration: "Indefinite" },
+                    { code: "NY", name: "NEW YORK", status: "HALF", reason: "Memorial Day", duration: "24 Hours" },
+                ];
+                populateStateSelector();
+            }
+            
+            // Default to Virginia (VA) as a fallback
+            let initialState = statesData.find(s => s.code === 'VA') || statesData[0];
 
-    if (!dropdown.classList.contains("hidden")) {
-      const dropdownHeight = 300; // matches your max-height
-      const spaceBelow = window.innerHeight - rect.bottom;
+            const locationLine = bootOutput("LOADING USER LOCATION...");
 
-      // If not enough room below → open ABOVE
-      if (spaceBelow < dropdownHeight + 20) {
-        dropdown.style.top = (rect.top - dropdownHeight - 10) + "px";
-      } else {
-        dropdown.style.top = rect.bottom + "px";
-      }
+            // Geolocation and initial state selection
+            if (navigator.geolocation && statesData.length > 0) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        // In a real application, you would use a geocoding service here
+                        // to convert coords to a state code. For now, we simulate finding TX.
+                        initialState = statesData.find(s => s.code === 'TX') || initialState;
+                        locationLine.innerText = `LOCATION ACQUIRED. [${initialState.code}] AUTO-SELECTED.`;
+                        gsap.to(locationLine, { color: 'var(--neon)', duration: 0.2 });
+                        selectState(initialState, true);
+                        onComplete();
+                    },
+                    (error) => {
+                        locationLine.innerText = `LOCATION ERROR. DEFAULTING TO [VA].`;
+                        gsap.to(locationLine, { color: '#FF2E00', duration: 0.2 });
+                        selectState(initialState, true);
+                        onComplete();
+                    },
+                    { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
+                );
+            } else if (statesData.length > 0) {
+                 locationLine.innerText = `GEOLOCATION UNSUPPORTED. DEFAULTING TO [VA].`;
+                 gsap.to(locationLine, { color: '#FF2E00', duration: 0.2 });
+                 selectState(initialState, true);
+                 onComplete();
+            } else {
+                 locationLine.innerText = `CRITICAL ERROR: NO STATE DATA AVAILABLE.`;
+                 onComplete();
+            }
+        }
+        
+        function initializeAppVisuals() {
+            // Animate in the static text/info panels
+            gsap.to(".animate-in", { opacity: 1, y: 0, duration: 1, stagger: 0.1, ease: "power2.out", delay: 0.2 });
+            
+            // Animate in the US Flag
+            gsap.fromTo("#us-flag-wrapper", 
+                { y: 300, opacity: 0, rotateX: 45 }, 
+                { y: 20, opacity: 1, rotateX: 0, duration: 3, ease: "power3.inOut", delay: 0.5 }
+            );
+            
+            // Start the time ticker loop
+            updateTime();
+            setInterval(updateTime, 1000); 
+        }
 
-      dropdown.style.left = rect.left + "px";
-    }
-    return;
-  }
+        
+        // --- 4. CURSOR & HOVER LOGIC ---
+        // (Existing logic for cursor, center divider hover, etc. remains here)
+        const cursorDot = document.querySelector('.cursor-dot');
+        const cursorOutline = document.querySelector('.cursor-outline');
+        let cursorScale = 1;
 
-  if (!dropdown.contains(e.target)) {
-    dropdown.classList.add("hidden");
-  }
-});
+        window.addEventListener('mousemove', (e) => {
+            cursorDot.style.left = `${e.clientX}px`;
+            cursorDot.style.top = `${e.clientY}px`;
+            cursorOutline.style.transform = `translate(${e.clientX - 15}px, ${e.clientY - 15}px) scale(${cursorScale})`;
+        });
 
-dropdown.addEventListener("click", (e) => {
-  if (e.target.dataset.code && window.loadedSvgDoc) {
-    dropdown.classList.add("hidden");
-    loadFlagStatus(e.target.dataset.code, window.loadedSvgDoc);
-  }
-});
+        document.querySelectorAll('.hover-trigger, button, [onclick], .status-badge').forEach(el => {
+            el.addEventListener('mouseenter', () => { cursorScale = 0.6; });
+            el.addEventListener('mouseleave', () => { cursorScale = 1; });
+        });
 
-/* ---------------- SVG Initialization ---------------- */
-document.getElementById("skylineSVG").addEventListener("load", () => {
-  const svgDoc = document.getElementById("skylineSVG").contentDocument;
-  window.loadedSvgDoc = svgDoc;
+        const centerDivider = document.getElementById('center-divider');
+        const mainWrapper = document.getElementById('main-wrapper');
 
-  // No CSS transitions needed; animation is handled entirely in JS
-  loadFlagStatus(null, svgDoc);
-});
-</script>
-
+        if (centerDivider) {
+            centerDivider.addEventListener('mouseenter', () => {
+                mainWrapper.classList.add('center-hover-active');
+            });
+            centerDivider.addEventListener('mouseleave', () => {
+                mainWrapper.classList.remove('center-hover-active');
+            });
+        }
+        
+        // Initial call to start the boot sequence
+        document.addEventListener('DOMContentLoaded', runBootSequence);
+    </script>
 </body>
 </html>
