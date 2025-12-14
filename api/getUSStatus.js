@@ -17,18 +17,21 @@ export default async function handler(req, res) {
         LIMIT 1;
     `;
 
+    console.log("US Status Query Result:", result); // Debug log
+
     let usStatusData = { 
         status: "FULL", 
         reason: "Standard Protocols", 
         duration: "Indefinite" 
     };
 
-    // If a record exists and indicates half mast, use that data
+    // If a record exists, check the half_mast value
     if (result.length > 0) {
         const record = result[0];
-        const isHalf = record.half_mast === true;
+        console.log("Half Mast Value:", record.half_mast, "Type:", typeof record.half_mast); // Debug log
         
-        if (isHalf) {
+        // Explicitly check if half_mast is true
+        if (record.half_mast === true) {
             // Format end_date if it exists
             const duration = record.end_date 
                 ? `Until ${new Date(record.end_date).toLocaleDateString()}` 
@@ -39,9 +42,17 @@ export default async function handler(req, res) {
                 reason: record.reason || "Presidential Proclamation",
                 duration: duration
             };
+        } else {
+            // Explicitly set to FULL when half_mast is false
+            usStatusData = {
+                status: "FULL",
+                reason: record.reason || "Standard Protocols",
+                duration: "Indefinite"
+            };
         }
-        // If half_mast is false or null, it remains the default FULL
     }
+
+    console.log("Returning US Status:", usStatusData); // Debug log
 
     return res.status(200).json(usStatusData);
   } catch (err) {
