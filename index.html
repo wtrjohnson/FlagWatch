@@ -14,8 +14,6 @@
             --neon: #D2FF00;
             --void: #050505;
             --off-white: #EAEAEA;
-            --metal-highlight: rgba(255, 255, 255, 0.4);
-            --metal-shadow: rgba(0, 0, 0, 0.8);
             --us-red: #B22234;
             --us-blue: #3C3B6E;
         }
@@ -28,30 +26,11 @@
             cursor: none;
         }
 
-        /* --- UI UTILS --- */
         .mono { font-family: 'Azeret Mono', monospace; }
         
         /* Cursor */
-        .cursor-dot { 
-            width: 6px; 
-            height: 6px; 
-            background: var(--neon); 
-            position: fixed; 
-            border-radius: 50%; 
-            pointer-events: none; 
-            z-index: 9999; 
-        }
-        .cursor-outline { 
-            width: 30px; 
-            height: 30px; 
-            border: 1px solid var(--neon); 
-            position: fixed; 
-            border-radius: 50%; 
-            pointer-events: none; 
-            z-index: 9998; 
-            transition: transform 0.15s ease-out; 
-            box-shadow: 0 0 12px rgba(210, 255, 0, 0.4);
-        }
+        .cursor-dot { width: 6px; height: 6px; background: var(--neon); position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999; }
+        .cursor-outline { width: 30px; height: 30px; border: 1px solid var(--neon); position: fixed; border-radius: 50%; pointer-events: none; z-index: 9998; transition: transform 0.15s ease-out; box-shadow: 0 0 12px rgba(210, 255, 0, 0.4); }
         
         .noise-overlay {
             position: fixed; inset: 0; pointer-events: none; z-index: 900;
@@ -59,87 +38,30 @@
             opacity: 0.3;
         }
 
-        /* BOOT SEQUENCE OVERLAY (REMOVED) */
-        
-        /* MAIN CONTENT: Now visible by default */
-        #content-wrapper {
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 1s ease;
-        }
-
-        /* --- DEPTH / LIGHTING BEHIND MAST --- */
+        /* --- LIGHTING --- */
         .mast-light {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 320px;
-            height: 480px;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(210,255,0,0.18) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 0;
-            animation: glowPulse 6s ease-in-out infinite;
+            position: absolute; top: 50%; left: 50%; width: 320px; height: 480px; transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(210,255,0,0.18) 0%, transparent 70%); pointer-events: none; z-index: 0; animation: glowPulse 6s ease-in-out infinite;
         }
-
         .mast-fog {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 380px;
-            height: 380px;
-            transform: translate(-50%, -50%);
-            background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%);
-            filter: blur(40px);
-            pointer-events: none;
-            z-index: 0;
+            position: absolute; top: 50%; left: 50%; width: 380px; height: 380px; transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%); filter: blur(40px); pointer-events: none; z-index: 0;
         }
+        @keyframes glowPulse { 0% { opacity: 0.18; } 50% { opacity: 0.32; } 100% { opacity: 0.18; } }
 
-        @keyframes glowPulse {
-            0% { opacity: 0.18; }
-            50% { opacity: 0.32; }
-            100% { opacity: 0.18; }
-        }
-
-        /* --- THE MAST SYSTEM --- */
-        .mast-structure {
-            width: 12px; height: 100%; position: absolute; left: 50%; transform: translateX(-50%);
-            background: linear-gradient(90deg, #2a2a2a 0%, #555 20%, #888 45%, #999 50%, #888 55%, #555 80%, #2a2a2a 100%);
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8); z-index: 20;
-        }
-        .mast-finial {
-            position: absolute; 
-            top: -15px; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            width: 24px; 
-            height: 24px;
-            border-radius: 50%; 
-            background: radial-gradient(circle at 30% 30%, #fff, #b8b8b8, #4a4a4a);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); 
-            z-index: 20;
-        }
-        .mast-halyard {
-            position: absolute; left: 50%; top: 0; height: 100%; width: 2px;
-            background: rgba(255,255,255,0.3); transform: translateX(8px); z-index: 20; pointer-events: none;
-        }
-        .flag-group {
-            position: absolute; left: 50%; perspective: 1000px; transform-style: preserve-3d;
-            /* Flag Z-index set low (9) */
-            z-index: 9; 
-            pointer-events: none;
-        }
-        .flag {
-            width: 280px; height: 175px; position: relative; transform-origin: left center;
-            animation: wave 5s ease-in-out infinite alternate;
-            box-shadow: 20px 20px 50px rgba(0,0,0,0.6); border-left: 4px solid white;
-        }
-        .grommet {
-            position: absolute; left: -4px; width: 10px; height: 10px; border: 2px solid #ccc;
-            border-radius: 50%; background: transparent; z-index: 25;
-        }
-        .grommet.top { top: 5px; }
-        .grommet.bottom { bottom: 5px; }
+        /* --- MAST --- */
+        .mast-structure { width: 12px; height: 100%; position: absolute; left: 50%; transform: translateX(-50%); background: linear-gradient(90deg, #2a2a2a 0%, #555 20%, #888 45%, #999 50%, #888 55%, #555 80%, #2a2a2a 100%); z-index: 20; }
+        .mast-finial { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 24px; height: 24px; border-radius: 50%; background: radial-gradient(circle at 30% 30%, #fff, #b8b8b8, #4a4a4a); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); z-index: 20; }
+        .mast-halyard { position: absolute; left: 50%; top: 0; height: 100%; width: 2px; background: rgba(255,255,255,0.3); transform: translateX(8px); z-index: 20; pointer-events: none; }
+        
+        .flag-group { position: absolute; left: 50%; perspective: 1000px; transform-style: preserve-3d; z-index: 9; pointer-events: none; }
+        .flag { width: 280px; height: 175px; position: relative; transform-origin: left center; animation: wave 5s ease-in-out infinite alternate; box-shadow: 20px 20px 50px rgba(0,0,0,0.6); border-left: 4px solid white; }
+        
+        /* Flag Image Handling */
+        .flag img { width: 100%; height: 100%; object-fit: cover; }
+        
+        .grommet { position: absolute; left: -4px; width: 10px; height: 10px; border: 2px solid #ccc; border-radius: 50%; background: transparent; z-index: 25; }
+        .grommet.top { top: 5px; } .grommet.bottom { bottom: 5px; }
 
         @keyframes wave {
             0% { transform: rotateY(0deg) skewY(0deg) translateX(6px); }
@@ -147,50 +69,20 @@
             100% { transform: rotateY(5deg) skewY(-2deg) translateX(6px); }
         }
 
-        /* --- FLAG VARIANTS --- */
-        .us-flag {
-            background: white;
-            background-image: repeating-linear-gradient(180deg, var(--us-red), var(--us-red) 13.4px, white 13.4px, white 26.9px);
-        }
+        /* --- FLAG TEXTURES (US Only - CSS Based) --- */
+        .us-flag { background: white; background-image: repeating-linear-gradient(180deg, var(--us-red), var(--us-red) 13.4px, white 13.4px, white 26.9px); }
         .us-canton { position: absolute; top: 0; left: 0; width: 45%; height: 53.8%; background: var(--us-blue); }
 
-        /* State Styles (Dynamic Classes) */
-        .state-flag-blue { background: #002664; display: flex; align-items: center; justify-content: center; }
-        .state-flag-white { background: #ffffff; display: flex; align-items: center; justify-content: center; border: 1px solid #ccc;}
-        .state-flag-texas { background: white; }
-        
-        .state-seal { width: 70px; height: 70px; border-radius: 50%; background: white; border: 4px solid #C4A900; opacity: 0.9; }
-        
-        /* Texas Special */
-        .state-flag-texas .tx-blue { position: absolute; left: 0; top: 0; bottom: 0; width: 33%; background: #002868; }
-        .state-flag-texas .tx-top { position: absolute; left: 33%; top: 0; right: 0; height: 50%; background: white; }
-        .state-flag-texas .tx-bot { position: absolute; left: 33%; top: 50%; right: 0; height: 50%; background: #BF0A30; }
+        /* --- UI PANELS --- */
+        #state-selector { pointer-events: none; opacity: 0; transition: opacity 0.4s ease; }
+        #state-selector.active { pointer-events: all; opacity: 1; }
 
-
-        /* --- OVERLAY SYSTEM --- */
-        /* Make sure selector is initially hidden */
-        #state-selector {
-            pointer-events: none; opacity: 0; transition: opacity 0.4s ease;
-        }
-        #state-selector.active {
-            pointer-events: all; opacity: 1;
-        }
-
-        /* --- SPLIT PANE INTERACTION --- */
         .split-pane { transition: filter 0.5s ease, opacity 0.5s ease; }
-        
-        /* Default state when the wrapper is hovered (i.e., when no split-pane or center divider is specifically hovered) */
         .wrapper:hover .split-pane { opacity: 0.4; filter: grayscale(100%) blur(3px); }
-        
-        /* State when a specific split-pane is hovered */
         .wrapper .split-pane:hover { opacity: 1; filter: grayscale(0%) blur(0px); z-index: 10; }
 
-        /* State when the center divider is hovered (CSS only trigger for visualization) */
-        .center-divider:hover + .split-pane,
-        .center-divider:hover ~ .split-pane { 
-            opacity: 1; 
-            filter: grayscale(0%) blur(0px); 
-        }
+        /* The center divider hover effect */
+        .center-hover-active .split-pane { opacity: 1 !important; filter: grayscale(0%) blur(0px) !important; }
 
         .status-badge {
             display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px;
@@ -198,44 +90,28 @@
             text-transform: uppercase; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
         }
         .status-dot { width: 6px; height: 6px; border-radius: 50%; }
-        /* Unified status colors: Green for Full Staff, Red for Half Staff */
         .status-dot.green { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
         .status-dot.red { background: #FF2E00; box-shadow: 0 0 10px #FF2E00; }
         
-        /* Custom Scrollbar for list */
         .scroller::-webkit-scrollbar { width: 4px; }
         .scroller::-webkit-scrollbar-track { background: #111; }
         .scroller::-webkit-scrollbar-thumb { background: #333; }
-        .scroller::-webkit-scrollbar-thumb:hover { background: var(--neon); }
 
-        .hover-trigger:hover {
-            background-color: rgba(210, 255, 0, 0.1);
-            color: var(--neon);
-            border-color: var(--neon);
-        }
+        .hover-trigger:hover { background-color: rgba(210, 255, 0, 0.1); color: var(--neon); border-color: var(--neon); }
 
         .state-info-panel {
-            /* CRITICAL FIX: Set a high z-index (50) and explicitly set position to ensure it stacks above the flag (9) */
             position: relative;
             z-index: 50; 
-            /* Added background to ensure the flag is fully obscured when it passes behind */
-            background: #000000; 
-	    width: 100%;
+            width: 100%;
+            background: #080808; /* Solid background to ensure text readability */
+            padding-bottom: 20px; 
         }
-
-        /* Bottom ticker always above everything else */
-        .ticker-bar {
-            z-index: 100;
-        }
-
-        /* New class for when the center is hovered (applied via JS) */
-        .center-hover-active .split-pane {
-             opacity: 1 !important; 
-             filter: grayscale(0%) blur(0px) !important; 
-        }
+        
+        .ticker-bar { z-index: 100; }
     </style>
 </head>
 <body class="selection:bg-[#D2FF00] selection:text-black">
+    
     <div id="content-wrapper">
         <div class="cursor-dot"></div>
         <div class="cursor-outline"></div>
@@ -255,7 +131,6 @@
         <main class="wrapper w-full h-screen flex flex-col md:flex-row pt-16 relative" id="main-wrapper">
             
             <div class="absolute left-1/2 top-0 bottom-0 w-[1px] bg-white/10 transform -translate-x-1/2 hidden md:block z-0"></div>
-
             <div id="center-divider" class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[100px] w-[100px] hidden md:block z-40 cursor-pointer">
                 <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black border border-white/20 p-2 rotate-45">
                     <div class="w-2 h-2 bg-[#D2FF00]"></div>
@@ -266,19 +141,17 @@
                 <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"></div>
 
                 <div class="relative z-30 w-full h-full flex flex-col justify-between p-12">
-                    <div class="flex justify-between items-start opacity-0 animate-in">
+                    <div class="flex justify-between items-start animate-in">
                         <div>
                             <div class="mono text-xs text-gray-500 mb-1">JURISDICTION</div>
                             <h2 class="text-3xl font-bold tracking-tight">UNITED STATES</h2>
                         </div>
-                        <div class="status-badge"><div class="status-dot green"></div> FULL STAFF</div>
+                        <div class="status-badge" id="us-badge"><div class="status-dot green"></div> FULL STAFF</div>
                     </div>
 
                     <div class="flex-grow flex items-center justify-center relative my-8">
                         <div class="relative h-[500px] w-20 flex justify-center z-0">
-                            <div class="mast-light"></div>
-                            <div class="mast-fog"></div>
-
+                            <div class="mast-light"></div><div class="mast-fog"></div>
                             <div class="mast-structure"><div class="mast-finial"></div></div>
                             <div class="mast-halyard"></div>
                             <div class="flag-group" id="us-flag-wrapper">
@@ -291,14 +164,14 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-6 opacity-0 animate-in state-info-panel">
+                    <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-6 animate-in state-info-panel">
                         <div>
-                            <div class="mono text-[10px] text-gray-500">LAST ORDER</div>
-                            <div class="text-sm">None Active</div>
+                            <div class="mono text-[10px] text-gray-500">REASONING</div>
+                            <div class="text-sm max-w-[200px] leading-tight" id="us-reason">--</div>
                         </div>
                         <div class="text-right">
-                            <div class="mono text-[10px] text-gray-500">PROTOCOLS</div>
-                            <div class="text-sm text-[#D2FF00]">Standard</div>
+                            <div class="mono text-[10px] text-gray-500">DURATION</div>
+                            <div class="text-sm text-[#D2FF00]" id="us-duration">--</div>
                         </div>
                     </div>
                 </div>
@@ -309,7 +182,7 @@
                 <div class="absolute top-1/2 right-0 w-[400px] h-[400px] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none"></div>
 
                 <div class="relative z-30 w-full h-full flex flex-col justify-between p-12">
-                    <div class="flex justify-between items-start opacity-0 animate-in w-full">
+                    <div class="flex justify-between items-start animate-in w-full">
                         <div>
                             <div class="flex items-center gap-2 mb-1 cursor-pointer hover:text-[#D2FF00] transition-colors hover-trigger" onclick="toggleStateSelector()">
                                 <span class="mono text-xs text-gray-500">TARGET: <span id="state-code">--</span></span>
@@ -324,18 +197,15 @@
 
                     <div class="flex-grow flex items-center justify-center relative my-8">
                         <div class="relative h-[500px] w-20 flex justify-center z-0">
-                            <div class="mast-light"></div>
-                            <div class="mast-fog"></div>
-
+                            <div class="mast-light"></div><div class="mast-fog"></div>
                             <div class="mast-structure"><div class="mast-finial"></div></div>
                             <div class="mast-halyard"></div>
-
                             <div class="flag-group" id="state-flag-wrapper">
                                 </div>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-6 opacity-0 animate-in state-info-panel">
+                    <div class="grid grid-cols-2 gap-4 border-t border-white/10 pt-6 animate-in state-info-panel">
                         <div>
                             <div class="mono text-[10px] text-gray-500">REASONING</div>
                             <div class="text-sm max-w-[200px] leading-tight" id="state-reason">--</div>
@@ -347,21 +217,17 @@
                     </div>
                 </div>
             </section>
-
         </main>
 
         <div id="state-selector" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-lg flex items-center justify-center">
             <div class="w-full max-w-4xl h-[80vh] bg-[#0A0A0A] border border-white/10 flex flex-col relative overflow-hidden">
                 <button onclick="toggleStateSelector()" class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center border border-white/20 hover:bg-white/20 text-white mono">X</button>
-                
                 <div class="p-8 border-b border-white/10">
                     <h2 class="text-4xl font-bold mb-2">SELECT JURISDICTION</h2>
-                    <p class="mono text-xs text-gray-500">ACCESSING FEDERAL DATABASE... SELECT TARGET FOR TELEMETRY.</p>
+                    <p class="mono text-xs text-gray-500">ACCESSING FEDERAL DATABASE... SELECT TARGET.</p>
                 </div>
-
                 <div class="flex-grow overflow-y-auto p-8 scroller">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="state-grid">
-                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="state-grid"></div>
                 </div>
             </div>
         </div>
@@ -369,93 +235,63 @@
         <div class="fixed bottom-0 w-full bg-[#D2FF00] text-black py-2 overflow-hidden border-t border-black ticker-bar">
             <div class="whitespace-nowrap flex gap-16 animate-[scroll_20s_linear_infinite] mono text-xs font-bold uppercase">
                 <span>/// Live Telemetry Feed</span>
-                <span>/// National Status: Green</span>
-                <span>/// Data Integrity: Nominal</span>
-                <span>/// State Status: Monitoring (<span id="ticker-state-code">--</span>)</span>
+                <span>/// National Status: <span id="ticker-national">INIT...</span></span>
+                <span>/// System Integrity: 100% (Nominal)</span>
+                <span>/// State Status: <span id="ticker-state-code">--</span></span>
                 <span>/// Live Clock: <span id="ticker-time">--:--</span> EST</span>
-                <span>/// Current State Order: INIT...</span>
-                <span>/// Verify all protocols locally</span>
+                <span>/// <span id="ticker-order">Current State Order: INIT...</span></span>
             </div>
         </div>
     </div>
 
     <script>
-        // --- DATA SOURCE ---
-        // 1. API endpoint setup for Netlify Functions
         const API_BASE_URL = '/.netlify/functions';
-        
-        // 2. State data will be loaded here from the API
         let statesData = []; 
-        
-        let currentState = null; 
-        let lastSelectionTime = "--:-- EST"; 
+        let currentState = null;
 
-        // --- BOOT SEQUENCE LOGIC (from original file) ---
-        const bootMessages = [
-            "INITIATING THE MAST TELEMETRY V8.0.1...",
-            "SYSTEM CHECK: CPU/GPU CLOCK SPEED 100%",
-            "NETWORK: ESTABLISHING SECURE CONNECTION...",
-            "DB: PINGING NEON POSTGRESQL INSTANCE...",
-            "DB: CONNECTION ESTABLISHED. SSL ENCRYPTED.",
-            "PROTOCOL: LOADING US FEDERAL HALF-MAST STATUS...",
-            "STATUS: US NATIONAL FLAG IS CURRENTLY FULL STAFF.",
-        ];
-        
-        const bootCursor = document.getElementById('boot-cursor');
-        
-        function runBootSequence() {
-            let delay = 0;
-            bootCursor.classList.remove('opacity-0'); // Show cursor
+        // --- 1. US FLAG LOGIC ---
+        function updateUSVisuals(usStatus) {
+            const flagWrapper = document.getElementById('us-flag-wrapper');
+            const badge = document.getElementById('us-badge');
             
-            bootMessages.forEach((msg) => {
-                delay += 0.8; 
-                gsap.to(bootCursor, { duration: 0.1, delay: delay, onComplete: () => bootOutput(msg) });
-            });
+            // Text Elements
+            const reasonDiv = document.getElementById('us-reason');
+            const durationDiv = document.getElementById('us-duration');
+            const ticker = document.getElementById('ticker-national');
+            
+            let targetY = 20; // Full staff
 
-            // Start the heavy lifting (API fetch, Geolocation) after the initial messages
-            delay += 1;
-            gsap.to({}, { 
-                duration: 0.1, 
-                delay: delay, 
-                onComplete: () => loadInitialState(() => {
-                    // Final steps after initial state is loaded
-                    bootOutput("BOOT SEQUENCE COMPLETE. WELCOME TO TELEMETRY.");
-                    gsap.to(bootCursor, { opacity: 0, duration: 0.5 });
-                    gsap.to("#boot-screen", { 
-                        opacity: 0, 
-                        duration: 1, 
-                        delay: 1, 
-                        onComplete: () => {
-                            document.getElementById('boot-screen').style.display = 'none';
-                            document.getElementById('content-wrapper').style.visibility = 'visible';
-                            gsap.to("#content-wrapper", { opacity: 1, duration: 1 });
-                            // Start application loops and final animations
-                            initializeAppVisuals();
-                        }
-                    });
-                })
-            });
-        }
-        
-        // Helper function to append a line to the boot output
-        function bootOutput(text) {
-            const output = document.getElementById('boot-output');
-            const el = document.createElement('div');
-            el.className = "boot-line mono text-sm";
-            el.innerText = text;
-            output.appendChild(el);
-            output.scrollTop = output.scrollHeight;
-            gsap.fromTo(el, { opacity: 0, y: 5 }, { opacity: 1, y: 0, duration: 0.3 });
-            return el;
+            if (usStatus.status === 'HALF') {
+                targetY = 160; 
+                badge.className = "status-badge border-red-900/50 bg-red-900/10";
+                badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
+                
+                reasonDiv.innerText = usStatus.reason;
+                durationDiv.innerText = usStatus.duration;
+                durationDiv.className = "text-sm text-red-400"; 
+                ticker.innerText = "RED";
+                
+            } else {
+                badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
+                badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
+                
+                reasonDiv.innerText = "None Active";
+                durationDiv.innerText = "Indefinite";
+                durationDiv.className = "text-sm text-[#D2FF00]"; 
+                ticker.innerText = "GREEN";
+            }
+            
+            // Drop-in Animation
+            gsap.fromTo(flagWrapper, 
+                { y: 300, opacity: 0 }, 
+                { y: targetY, opacity: 1, duration: 2, ease: "power2.out", delay: 0.2 }
+            ); 
         }
 
-        // --- 1. POPULATE SELECTOR ---
-        const grid = document.getElementById('state-grid');
-        
+        // --- 2. STATE LOGIC ---
         function populateStateSelector() {
-            // Ensure grid is clear before populating
+            const grid = document.getElementById('state-grid');
             grid.innerHTML = '';
-            
             statesData.forEach(state => {
                 const el = document.createElement('div');
                 el.className = "hover-trigger border border-white/10 p-4 cursor-pointer transition-all flex justify-between items-center group";
@@ -472,236 +308,142 @@
                 grid.appendChild(el);
             });
         }
-        
-        // --- 2. INTERACTION LOGIC ---
-        
+
         function toggleStateSelector() {
-            const modal = document.getElementById('state-selector');
-            modal.classList.toggle('active');
+            document.getElementById('state-selector').classList.toggle('active');
         }
 
-        function selectState(state, isInitialLoad = false) {
-            // Update global state tracking
-            currentState = state; 
+        function selectState(state, isInitial = false) {
+            currentState = state;
+            updateTime();
             
-            // --- LOGIC: Capture and display selection time for NAV bar ---
-            const now = new Date();
-            lastSelectionTime = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' }) + " EST";
-            document.getElementById('time-display').textContent = lastSelectionTime;
-            // ---------------------------------------------------------------------
-
-            const modal = document.getElementById('state-selector');
-            if (modal.classList.contains('active')) {
+            // Close modal if open
+            if (document.getElementById('state-selector').classList.contains('active')) {
                 toggleStateSelector();
             }
 
-            const flagVis = document.getElementById('state-flag-visual');
-            const shouldAnimate = flagVis && !isInitialLoad;
+            // Flag Animation & Visuals
+            const targetY = state.status === 'HALF' ? 160 : 20;
+            const flagWrapper = document.getElementById('state-flag-wrapper');
 
-            if (!shouldAnimate) {
-                updateStateVisuals(state);
-                updateTicker();
-                const targetY = state.status === 'HALF' ? 160 : 20;
-                gsap.fromTo("#state-flag-wrapper", 
-                    { y: 300, opacity: 0, rotateX: 45 },
-                    { y: targetY, opacity: 1, rotateX: 0, duration: 3, ease: "elastic.out(1, 0.9)" }
-                );
+            const runVisualUpdate = () => {
+                updateStateText(state);
+                renderStateFlag(state);
+            };
+
+            if (isInitial) {
+                runVisualUpdate();
+                gsap.set(flagWrapper, { y: targetY });
+                gsap.from(flagWrapper, { y: 300, opacity: 0, duration: 2, ease: "power2.out", delay: 0.4 });
             } else {
-                gsap.to("#state-flag-wrapper", {
-                    y: 500, // Drop down off screen
-                    opacity: 0,
-                    duration: 1,
-                    ease: "power2.in",
+                gsap.to(flagWrapper, {
+                    y: 500, opacity: 0, duration: 0.8, ease: "power2.in",
                     onComplete: () => {
-                        updateStateVisuals(state);
-                        updateTicker(); // Update ticker after state change
-                        const targetY = state.status === 'HALF' ? 160 : 20;
-                        gsap.fromTo("#state-flag-wrapper", 
+                        runVisualUpdate();
+                        gsap.fromTo(flagWrapper, 
                             { y: 500, opacity: 0 },
-                            { y: targetY, opacity: 1, duration: 2.5, ease: "elastic.out(1, 0.75)" }
+                            { y: targetY, opacity: 1, duration: 2, ease: "elastic.out(1, 0.75)" }
                         );
                     }
                 });
             }
         }
 
-        /**
-         * @description Updates the visual display for the selected state flag and info.
-         * Now uses an <img> tag pointing to the FlagIcons/{CODE}.svg file.
-         * @param {object} state - The state data object.
-         */
-        function updateStateVisuals(state) {
-            // Update Text
+        function updateStateText(state) {
             document.getElementById('state-name').innerText = state.name;
             document.getElementById('state-code').innerText = state.code;
             document.getElementById('state-reason').innerText = state.reason;
             document.getElementById('state-duration').innerText = state.duration;
 
-            // Update Badge (Uses unified Green/Red logic)
             const badge = document.getElementById('state-badge');
+            const durationTxt = document.getElementById('state-duration');
+            
             if(state.status === 'HALF') {
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
-                document.getElementById('state-duration').className = "text-sm text-red-400";
+                durationTxt.className = "text-sm text-red-400";
             } else {
                 badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
                 badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
-                document.getElementById('state-duration').className = "text-sm text-[#D2FF00]";
+                durationTxt.className = "text-sm text-[#D2FF00]";
             }
 
-            // Update Flag Visual Style using the image file
-            const flagWrapper = document.getElementById('state-flag-wrapper');
-            let flagVis = document.getElementById('state-flag-visual');
-            // Assuming .svg format as advised. Change to .png if necessary.
-            const imagePath = `FlagIcons/${state.code}.svg`; 
+            document.getElementById('ticker-state-code').innerText = state.code;
+            document.getElementById('ticker-order').innerText = `Current Order: ${state.status}`;
+        }
 
-            if (!flagVis) {
-                flagVis = document.createElement('div');
-                flagVis.id = 'state-flag-visual';
-                // Apply the necessary classes for the flag container
-                flagVis.className = "flag"; 
-                flagWrapper.appendChild(flagVis);
-            } else {
-                flagVis.className = "flag";
-            }
+        function renderStateFlag(state) {
+            const wrapper = document.getElementById('state-flag-wrapper');
+            wrapper.innerHTML = '';
             
-            // Populate with the image, grommets, and shadow overlay
-            flagVis.innerHTML = `
-                <img src="${imagePath}" alt="${state.name} Flag" onerror="this.onerror=null;this.src='FlagIcons/default.svg';" class="w-full h-full object-cover">
-                <div class="grommet top"></div>
-                <div class="grommet bottom"></div>
+            const flag = document.createElement('div');
+            flag.className = "flag";
+            
+            // Image Path: Assumes "FlagIcons/TX.svg"
+            const imagePath = `FlagIcons/${state.code}.svg`;
+
+            flag.innerHTML = `
+                <img src="${imagePath}" alt="${state.name}" onerror="this.onerror=null;this.src='FlagIcons/default.svg';">
+                <div class="grommet top"></div><div class="grommet bottom"></div>
                 <div class="absolute inset-0 bg-gradient-to-tr from-black/30 to-transparent"></div>
             `;
+            wrapper.appendChild(flag);
         }
 
-        // --- 3. INITIALIZATION & GLOBALS ---
+        // --- 3. INIT & APP START ---
+        async function initializeApp() {
+            try {
+                // 1. Fetch US Data
+                const usRes = await fetch(`${API_BASE_URL}/getUSStatus`);
+                const usData = await usRes.json();
+                updateUSVisuals(usData);
+
+                // 2. Fetch State Data
+                const stateRes = await fetch(`${API_BASE_URL}/getAllStates`);
+                statesData = await stateRes.json();
+                populateStateSelector();
+
+                // 3. Select Initial State (Default VA)
+                const initialState = statesData.find(s => s.code === 'VA') || statesData[0];
+                selectState(initialState, true);
+
+                // Intro Anims
+                gsap.from(".animate-in", { opacity: 0, y: 20, duration: 1, stagger: 0.1, delay: 0.5 });
+
+            } catch (error) {
+                console.error("Initialization Failed:", error);
+                document.getElementById('main-wrapper').innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center text-red-500 font-bold mono">
+                        SYSTEM ERROR: DB CONNECTION FAILED
+                    </div>
+                `;
+            }
+        }
+
+        // Utils
         function updateTime() {
             const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
-            
-            // Only update Ticker time (live clock)
-            document.getElementById('ticker-time').textContent = timeString;
-        }
-        
-        function updateTicker() {
-            if (!currentState) return;
-            const tickerWrapper = document.querySelector('.ticker-bar .whitespace-nowrap');
-            if (!tickerWrapper) return;
-
-            document.getElementById('ticker-state-code').textContent = currentState.code;
-            const stateOrderSpan = Array.from(tickerWrapper.querySelectorAll('span')).find(span => span.textContent.includes('Current State Order'));
-            if (stateOrderSpan) {
-                stateOrderSpan.innerHTML = `/// Current State Order: ${currentState.status} STAFF`;
-            }
-        }
-        
-        // New async function to fetch data and handle initial state selection
-        async function loadInitialState(onComplete) {
-            
-            // Fetch all states from the API
-            bootOutput("FETCHING STATE PROTOCOLS...");
-            try {
-                const response = await fetch(`${API_BASE_URL}/getAllStates`); 
-                if (!response.ok) {
-                    throw new Error(`API fetch failed with status: ${response.status}`);
-                }
-                statesData = await response.json(); 
-                populateStateSelector(); 
-            } catch (error) {
-                console.error("Error fetching state data:", error);
-                bootOutput(`DATABASE OFFLINE: FALLING BACK TO STATIC. Error: ${error.message.split(':')[0]}`);
-                // FALLBACK for development/offline mode
-                statesData = [
-                    { code: "VA", name: "VIRGINIA", status: "HALF", reason: "Fallen Trooper", duration: "Until Sunset" },
-                    { code: "TX", name: "TEXAS", status: "FULL", reason: "No active orders", duration: "Indefinite" },
-                    { code: "NY", name: "NEW YORK", status: "HALF", reason: "Memorial Day", duration: "24 Hours" },
-                ];
-                populateStateSelector();
-            }
-            
-            // Default to Virginia (VA) as a fallback
-            let initialState = statesData.find(s => s.code === 'VA') || statesData[0];
-
-            const locationLine = bootOutput("LOADING USER LOCATION...");
-
-            // Geolocation and initial state selection
-            if (navigator.geolocation && statesData.length > 0) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        // In a real application, you would use a geocoding service here
-                        // to convert coords to a state code. For now, we simulate finding TX.
-                        initialState = statesData.find(s => s.code === 'TX') || initialState;
-                        locationLine.innerText = `LOCATION ACQUIRED. [${initialState.code}] AUTO-SELECTED.`;
-                        gsap.to(locationLine, { color: 'var(--neon)', duration: 0.2 });
-                        selectState(initialState, true);
-                        onComplete();
-                    },
-                    (error) => {
-                        locationLine.innerText = `LOCATION ERROR. DEFAULTING TO [VA].`;
-                        gsap.to(locationLine, { color: '#FF2E00', duration: 0.2 });
-                        selectState(initialState, true);
-                        onComplete();
-                    },
-                    { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
-                );
-            } else if (statesData.length > 0) {
-                 locationLine.innerText = `GEOLOCATION UNSUPPORTED. DEFAULTING TO [VA].`;
-                 gsap.to(locationLine, { color: '#FF2E00', duration: 0.2 });
-                 selectState(initialState, true);
-                 onComplete();
-            } else {
-                 locationLine.innerText = `CRITICAL ERROR: NO STATE DATA AVAILABLE.`;
-                 onComplete();
-            }
-        }
-        
-        function initializeAppVisuals() {
-            // Animate in the static text/info panels
-            gsap.to(".animate-in", { opacity: 1, y: 0, duration: 1, stagger: 0.1, ease: "power2.out", delay: 0.2 });
-            
-            // Animate in the US Flag
-            gsap.fromTo("#us-flag-wrapper", 
-                { y: 300, opacity: 0, rotateX: 45 }, 
-                { y: 20, opacity: 1, rotateX: 0, duration: 3, ease: "power3.inOut", delay: 0.5 }
-            );
-            
-            // Start the time ticker loop
-            updateTime();
-            setInterval(updateTime, 1000); 
+            document.getElementById('ticker-time').textContent = now.toLocaleTimeString('en-US');
+            document.getElementById('time-display').textContent = now.toLocaleTimeString('en-US') + " EST";
         }
 
-        
-        // --- 4. CURSOR & HOVER LOGIC ---
-        // (Existing logic for cursor, center divider hover, etc. remains here)
         const cursorDot = document.querySelector('.cursor-dot');
         const cursorOutline = document.querySelector('.cursor-outline');
-        let cursorScale = 1;
-
         window.addEventListener('mousemove', (e) => {
             cursorDot.style.left = `${e.clientX}px`;
             cursorDot.style.top = `${e.clientY}px`;
-            cursorOutline.style.transform = `translate(${e.clientX - 15}px, ${e.clientY - 15}px) scale(${cursorScale})`;
-        });
-
-        document.querySelectorAll('.hover-trigger, button, [onclick], .status-badge').forEach(el => {
-            el.addEventListener('mouseenter', () => { cursorScale = 0.6; });
-            el.addEventListener('mouseleave', () => { cursorScale = 1; });
+            cursorOutline.style.transform = `translate(${e.clientX - 15}px, ${e.clientY - 15}px)`;
         });
 
         const centerDivider = document.getElementById('center-divider');
         const mainWrapper = document.getElementById('main-wrapper');
+        centerDivider.addEventListener('mouseenter', () => mainWrapper.classList.add('center-hover-active'));
+        centerDivider.addEventListener('mouseleave', () => mainWrapper.classList.remove('center-hover-active'));
 
-        if (centerDivider) {
-            centerDivider.addEventListener('mouseenter', () => {
-                mainWrapper.classList.add('center-hover-active');
-            });
-            centerDivider.addEventListener('mouseleave', () => {
-                mainWrapper.classList.remove('center-hover-active');
-            });
-        }
-        
-        // Initial call to start the boot sequence
-        document.addEventListener('DOMContentLoaded', runBootSequence);
+        // Start
+        setInterval(updateTime, 1000);
+        initializeApp();
+
     </script>
 </body>
 </html>
