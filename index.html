@@ -112,6 +112,19 @@
         
         .ticker-bar { z-index: 100; }
 
+        .ticker-content {
+            animation: scroll 30s linear infinite;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
         .location-indicator {
             display: inline-block;
             padding: 2px 6px;
@@ -139,7 +152,6 @@
                 <span>SYS: ONLINE</span>
                 <span>UPDATED: <span id="time-display">--:-- EST</span></span> 
             </div>
-            <div class="mono text-[10px] border border-white/20 px-3 py-1 hover:bg-[#D2FF00] hover:text-black hover:border-[#D2FF00] transition-colors cursor-none">MENU //</div>
         </nav>
 
         <main class="wrapper w-full h-screen flex flex-col md:flex-row pt-16 relative" id="main-wrapper">
@@ -250,13 +262,20 @@
         </div>
 
         <div class="fixed bottom-0 w-full bg-[#D2FF00] text-black py-2 overflow-hidden border-t border-black ticker-bar">
-            <div class="whitespace-nowrap flex gap-16 animate-[scroll_20s_linear_infinite] mono text-xs font-bold uppercase">
+            <div class="ticker-content whitespace-nowrap flex gap-16 mono text-xs font-bold uppercase">
                 <span>/// Live Telemetry Feed</span>
                 <span>/// National Status: <span id="ticker-national">INIT...</span></span>
                 <span>/// System Integrity: 100% (Nominal)</span>
                 <span>/// State Status: <span id="ticker-state-code">--</span></span>
                 <span>/// Live Clock: <span id="ticker-time">--:--</span> EST</span>
                 <span>/// <span id="ticker-order">Current State Order: INIT...</span></span>
+                <!-- Duplicate for seamless loop -->
+                <span>/// Live Telemetry Feed</span>
+                <span>/// National Status: <span id="ticker-national-2">INIT...</span></span>
+                <span>/// System Integrity: 100% (Nominal)</span>
+                <span>/// State Status: <span id="ticker-state-code-2">--</span></span>
+                <span>/// Live Clock: <span id="ticker-time-2">--:--</span> EST</span>
+                <span>/// <span id="ticker-order-2">Current State Order: INIT...</span></span>
             </div>
         </div>
     </div>
@@ -266,6 +285,7 @@
         let statesData = []; 
         let currentState = null;
         let detectedStateCode = null;
+        let lastUpdateTime = null;
 
         // --- GEOLOCATION FUNCTIONS ---
         
@@ -368,6 +388,10 @@
             const flagWrapper = document.getElementById('us-flag-wrapper');
             const badge = document.getElementById('us-badge');
             
+            // Update the "last updated" time when US flag loads
+            lastUpdateTime = new Date();
+            updateTimeDisplay();
+            
             // Text Elements
             const reasonDiv = document.getElementById('us-reason');
             const durationDiv = document.getElementById('us-duration');
@@ -384,6 +408,7 @@
                 durationDiv.innerText = usStatus.duration;
                 durationDiv.className = "text-sm text-red-400"; 
                 ticker.innerText = "RED";
+                document.getElementById('ticker-national-2').innerText = "RED";
                 
             } else {
                 badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
@@ -393,6 +418,7 @@
                 durationDiv.innerText = "Indefinite";
                 durationDiv.className = "text-sm text-[#D2FF00]"; 
                 ticker.innerText = "GREEN";
+                document.getElementById('ticker-national-2').innerText = "GREEN";
             }
             
             // Drop-in Animation
@@ -433,7 +459,10 @@
 
         function selectState(state, isInitial = false) {
             currentState = state;
-            updateTime();
+            
+            // Update the "last updated" time
+            lastUpdateTime = new Date();
+            updateTimeDisplay();
             
             // Show/hide location badge
             const locationBadge = document.getElementById('location-badge');
@@ -494,8 +523,11 @@
                 durationTxt.className = "text-sm text-[#D2FF00]";
             }
 
+            // Update both ticker instances
             document.getElementById('ticker-state-code').innerText = state.code;
+            document.getElementById('ticker-state-code-2').innerText = state.code;
             document.getElementById('ticker-order').innerText = `Current Order: ${state.status}`;
+            document.getElementById('ticker-order-2').innerText = `Current Order: ${state.status}`;
         }
 
         function renderStateFlag(state) {
@@ -562,8 +594,15 @@
         // Utils
         function updateTime() {
             const now = new Date();
-            document.getElementById('ticker-time').textContent = now.toLocaleTimeString('en-US');
-            document.getElementById('time-display').textContent = now.toLocaleTimeString('en-US') + " EST";
+            const timeStr = now.toLocaleTimeString('en-US');
+            document.getElementById('ticker-time').textContent = timeStr;
+            document.getElementById('ticker-time-2').textContent = timeStr;
+        }
+
+        function updateTimeDisplay() {
+            if (lastUpdateTime) {
+                document.getElementById('time-display').textContent = lastUpdateTime.toLocaleTimeString('en-US') + " EST";
+            }
         }
 
         const cursorDot = document.querySelector('.cursor-dot');
