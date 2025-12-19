@@ -70,8 +70,11 @@
         }
 
         /* --- FLAG TEXTURES (US Only - CSS Based) --- */
-        .us-flag { background: white; background-image: repeating-linear-gradient(180deg, var(--us-red), var(--us-red) 13.4px, white 13.4px, white 26.9px); }
-        .us-canton { position: absolute; top: 0; left: 0; width: 45%; height: 53.8%; background: var(--us-blue); }
+        .us-flag {
+            background: white url("/FlagIcons/USA.svg") no-repeat center center;
+            background-size: contain;
+        }
+
 
         /* --- UI PANELS --- */
         #state-selector { pointer-events: none; opacity: 0; transition: opacity 0.4s ease; }
