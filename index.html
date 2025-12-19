@@ -198,11 +198,11 @@
                         </div>
                         
                         <!-- US Reasoning Overlay -->
-                        <div class="absolute left-8 bottom-8 max-w-[280px]">
-                            <div class="text-sm text-gray-400 leading-tight" id="us-reason-display" style="display: none;">
-                                <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px;">in honor of</div>
-                                <div class="text-2xl font-bold mb-2" id="us-reason">--</div>
-                                <div class="text-red-400 text-sm font-bold" id="us-duration">--</div>
+                        <div class="absolute left-8 bottom-0 top-0 flex items-center max-w-[280px]">
+                            <div class="text-sm text-gray-400" id="us-reason-display">
+                                <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px; line-height: 1.2;">in honor of</div>
+                                <div class="text-2xl font-bold" style="line-height: 1.1;" id="us-reason">--</div>
+                                <div class="text-red-400 text-sm font-bold mt-1" id="us-duration">--</div>
                             </div>
                         </div>
                     </div>
@@ -240,11 +240,11 @@
                         </div>
                         
                         <!-- State Reasoning Overlay -->
-                        <div class="absolute left-8 bottom-8 max-w-[280px]">
-                            <div class="text-sm text-gray-400 leading-tight" id="state-reason-display" style="display: none;">
-                                <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px;">in honor of</div>
-                                <div class="text-2xl font-bold mb-2" id="state-reason">--</div>
-                                <div class="text-red-400 text-sm font-bold" id="state-duration">--</div>
+                        <div class="absolute left-8 bottom-0 top-0 flex items-center max-w-[280px]">
+                            <div class="text-sm text-gray-400" id="state-reason-display">
+                                <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px; line-height: 1.2;">in honor of</div>
+                                <div class="text-2xl font-bold" style="line-height: 1.1;" id="state-reason">--</div>
+                                <div class="text-red-400 text-sm font-bold mt-1" id="state-duration">--</div>
                             </div>
                         </div>
                     </div>
@@ -409,9 +409,12 @@
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
                 
-                reasonDiv.innerText = usStatus.reason;
-                durationDiv.innerText = usStatus.duration;
-                reasonDisplay.style.display = 'block';
+                // Show honor message
+                reasonDisplay.innerHTML = `
+                    <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px; line-height: 1.2;">in honor of</div>
+                    <div class="text-2xl font-bold text-white" style="line-height: 1.1;">${usStatus.reason}</div>
+                    <div class="text-red-400 text-sm font-bold mt-1">${usStatus.duration}</div>
+                `;
                 ticker.innerText = "RED";
                 document.getElementById('ticker-national-2').innerText = "RED";
                 
@@ -419,7 +422,10 @@
                 badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
                 badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
                 
-                reasonDisplay.style.display = 'none';
+                // Show "No active order" message
+                reasonDisplay.innerHTML = `
+                    <div class="text-lg text-gray-600" style="line-height: 1.2;">No active order</div>
+                `;
                 ticker.innerText = "GREEN";
                 document.getElementById('ticker-national-2').innerText = "GREEN";
             }
@@ -511,24 +517,27 @@
             document.getElementById('state-name').innerText = state.name;
             document.getElementById('state-code').innerText = state.code;
             
-            const reasonDiv = document.getElementById('state-reason');
-            const durationDiv = document.getElementById('state-duration');
             const reasonDisplay = document.getElementById('state-reason-display');
-
             const badge = document.getElementById('state-badge');
             
             if(state.status === 'HALF') {
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
                 
-                reasonDiv.innerText = state.reason;
-                durationDiv.innerText = state.duration;
-                reasonDisplay.style.display = 'block';
+                // Show honor message
+                reasonDisplay.innerHTML = `
+                    <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px; line-height: 1.2;">in honor of</div>
+                    <div class="text-2xl font-bold text-white" style="line-height: 1.1;">${state.reason}</div>
+                    <div class="text-red-400 text-sm font-bold mt-1">${state.duration}</div>
+                `;
             } else {
                 badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
                 badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
                 
-                reasonDisplay.style.display = 'none';
+                // Show "No active order" message
+                reasonDisplay.innerHTML = `
+                    <div class="text-lg text-gray-600" style="line-height: 1.2;">No active order</div>
+                `;
             }
 
             // Update both ticker instances
