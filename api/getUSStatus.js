@@ -9,15 +9,36 @@ export default async function handler(req, res) {
   try {
     const sql = neon(process.env.DATABASE_URL);
 
-    // STEP 1: Clean up expired orders (set half_mast = false where end_date has passed)
-    const now = new Date().toISOString();
-    await sql`
-        UPDATE flag_status
-        SET half_mast = false, updated_at = ${now}
+    // STEP 1: Clean up expired orders
+    // Since end_date may be in "Month Day" format like "December 10", we'll handle it in JavaScript
+    const allOrders = await sql`
+        SELECT id, end_date
+        FROM flag_status
         WHERE half_mast = true 
         AND end_date IS NOT NULL 
-        AND end_date::timestamp < ${now}::timestamp
+        AND end_date != ''
+        AND country_code = 'US'
+        AND state_code IS NULL
     `;
+
+    const now = new Date();
+    for (const order of allOrders) {
+        try {
+            // Parse "December 10" or similar formats - add current year
+            const endDate = new Date(`${order.end_date} ${now.getFullYear()}`);
+            
+            // If the date is in the past, reset to full staff
+            if (endDate < now) {
+                await sql`
+                    UPDATE flag_status
+                    SET half_mast = false, updated_at = NOW()
+                    WHERE id = ${order.id}
+                `;
+            }
+        } catch (e) {
+            console.error(`Could not parse date: ${order.end_date}`);
+        }
+    }
 
     // STEP 2: Query for the US National Flag status (state_code is NULL)
     const result = await sql`
