@@ -46,21 +46,43 @@ export default async function handler(req, res) {
     `;
 
     const now = new Date();
+    console.log(`Current time: ${now.toString()} (${now.toISOString()})`);
+    
     for (const order of allOrders) {
         try {
             // Parse "December 10" or similar formats - add current year
-            const endDate = new Date(`${order.end_date} ${now.getFullYear()}`);
+            const dateStr = `${order.end_date} ${now.getFullYear()}`;
+            const endDate = new Date(dateStr);
+            
+            console.log(`State ${order.state_code}: Parsing "${dateStr}"`);
+            console.log(`  -> Parsed as: ${endDate.toString()}`);
+            console.log(`  -> ISO: ${endDate.toISOString()}`);
+            console.log(`  -> Is valid? ${!isNaN(endDate.getTime())}`);
+            
+            if (isNaN(endDate.getTime())) {
+                console.error(`  -> Invalid date! Skipping.`);
+                continue;
+            }
+            
+            // Set to end of day (11:59:59 PM) so flags stay at half-mast through the entire end date
+            endDate.setHours(23, 59, 59, 999);
+            
+            console.log(`  -> End of day: ${endDate.toString()}`);
+            console.log(`  -> Expired? ${endDate < now}`);
             
             // If the date is in the past, reset to full staff
             if (endDate < now) {
+                console.log(`  -> RESETTING to full staff`);
                 await sql`
                     UPDATE flag_status
                     SET half_mast = false, updated_at = NOW()
                     WHERE id = ${order.id}
                 `;
+            } else {
+                console.log(`  -> Still active, keeping at half-mast`);
             }
         } catch (e) {
-            console.error(`Could not parse date: ${order.end_date} for state ${order.state_code}`);
+            console.error(`ERROR parsing date: ${order.end_date} for state ${order.state_code}:`, e);
         }
     }
 
