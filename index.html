@@ -106,11 +106,22 @@
             position: relative;
             z-index: 50; 
             width: 100%;
-            background: #080808; /* Solid background to ensure text readability */
+            background: #080808;
             padding-bottom: 20px; 
         }
         
         .ticker-bar { z-index: 100; }
+
+        .location-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            background: rgba(210, 255, 0, 0.1);
+            border: 1px solid var(--neon);
+            border-radius: 3px;
+            font-size: 9px;
+            color: var(--neon);
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body class="selection:bg-[#D2FF00] selection:text-black">
@@ -191,7 +202,10 @@
                                 <span class="mono text-xs text-gray-500">TARGET: <span id="state-code">--</span></span>
                                 <span class="text-[10px] bg-white/10 px-1 rounded text-[#D2FF00]">CHANGE ▼</span>
                             </div>
-                            <h2 class="text-3xl font-bold tracking-tight" id="state-name">LOADING...</h2>
+                            <h2 class="text-3xl font-bold tracking-tight flex items-center gap-2">
+                                <span id="state-name">LOADING...</span>
+                                <span id="location-badge" class="location-indicator" style="display: none;">YOUR LOCATION</span>
+                            </h2>
                         </div>
                         <div class="status-badge border-gray-600/50 bg-gray-900/10" id="state-badge">
                             <div class="status-dot" style="background:#555; box-shadow:0 0 5px #555;"></div> INIT...
@@ -251,6 +265,103 @@
         const API_BASE_URL = '/api';
         let statesData = []; 
         let currentState = null;
+        let detectedStateCode = null;
+
+        // --- GEOLOCATION FUNCTIONS ---
+        
+        // Mapping coordinates to state using boundary approximations
+        const STATE_BOUNDARIES = {
+            'AL': { lat: [30.2, 35.0], lng: [-88.5, -84.9] },
+            'AK': { lat: [51.2, 71.5], lng: [-179.1, -129.9] },
+            'AZ': { lat: [31.3, 37.0], lng: [-114.8, -109.0] },
+            'AR': { lat: [33.0, 36.5], lng: [-94.6, -89.6] },
+            'CA': { lat: [32.5, 42.0], lng: [-124.4, -114.1] },
+            'CO': { lat: [37.0, 41.0], lng: [-109.0, -102.0] },
+            'CT': { lat: [41.0, 42.1], lng: [-73.7, -71.8] },
+            'DE': { lat: [38.5, 39.8], lng: [-75.8, -75.0] },
+            'DC': { lat: [38.8, 39.0], lng: [-77.1, -76.9] },
+            'FL': { lat: [24.5, 31.0], lng: [-87.6, -80.0] },
+            'GA': { lat: [30.4, 35.0], lng: [-85.6, -80.8] },
+            'HI': { lat: [18.9, 22.2], lng: [-160.2, -154.8] },
+            'ID': { lat: [42.0, 49.0], lng: [-117.2, -111.0] },
+            'IL': { lat: [37.0, 42.5], lng: [-91.5, -87.5] },
+            'IN': { lat: [37.8, 41.8], lng: [-88.1, -84.8] },
+            'IA': { lat: [40.4, 43.5], lng: [-96.6, -90.1] },
+            'KS': { lat: [37.0, 40.0], lng: [-102.0, -94.6] },
+            'KY': { lat: [36.5, 39.1], lng: [-89.6, -81.9] },
+            'LA': { lat: [29.0, 33.0], lng: [-94.0, -89.0] },
+            'ME': { lat: [43.1, 47.5], lng: [-71.1, -66.9] },
+            'MD': { lat: [37.9, 39.7], lng: [-79.5, -75.0] },
+            'MA': { lat: [41.2, 42.9], lng: [-73.5, -69.9] },
+            'MI': { lat: [41.7, 48.3], lng: [-90.4, -82.4] },
+            'MN': { lat: [43.5, 49.4], lng: [-97.2, -89.5] },
+            'MS': { lat: [30.2, 35.0], lng: [-91.7, -88.1] },
+            'MO': { lat: [36.0, 40.6], lng: [-95.8, -89.1] },
+            'MT': { lat: [44.4, 49.0], lng: [-116.0, -104.0] },
+            'NE': { lat: [40.0, 43.0], lng: [-104.0, -95.3] },
+            'NV': { lat: [35.0, 42.0], lng: [-120.0, -114.0] },
+            'NH': { lat: [42.7, 45.3], lng: [-72.6, -70.6] },
+            'NJ': { lat: [38.9, 41.4], lng: [-75.6, -73.9] },
+            'NM': { lat: [31.3, 37.0], lng: [-109.0, -103.0] },
+            'NY': { lat: [40.5, 45.0], lng: [-79.8, -71.9] },
+            'NC': { lat: [33.8, 36.6], lng: [-84.3, -75.4] },
+            'ND': { lat: [45.9, 49.0], lng: [-104.0, -96.6] },
+            'OH': { lat: [38.4, 42.3], lng: [-84.8, -80.5] },
+            'OK': { lat: [33.6, 37.0], lng: [-103.0, -94.4] },
+            'OR': { lat: [42.0, 46.3], lng: [-124.6, -116.5] },
+            'PA': { lat: [39.7, 42.3], lng: [-80.5, -74.7] },
+            'RI': { lat: [41.1, 42.0], lng: [-71.9, -71.1] },
+            'SC': { lat: [32.0, 35.2], lng: [-83.4, -78.5] },
+            'SD': { lat: [42.5, 45.9], lng: [-104.1, -96.4] },
+            'TN': { lat: [35.0, 36.7], lng: [-90.3, -81.6] },
+            'TX': { lat: [25.8, 36.5], lng: [-106.6, -93.5] },
+            'UT': { lat: [37.0, 42.0], lng: [-114.0, -109.0] },
+            'VT': { lat: [42.7, 45.0], lng: [-73.4, -71.5] },
+            'VA': { lat: [36.5, 39.5], lng: [-83.7, -75.2] },
+            'WA': { lat: [45.5, 49.0], lng: [-124.8, -116.9] },
+            'WV': { lat: [37.2, 40.6], lng: [-82.6, -77.7] },
+            'WI': { lat: [42.5, 47.3], lng: [-92.9, -86.8] },
+            'WY': { lat: [41.0, 45.0], lng: [-111.0, -104.0] }
+        };
+
+        function detectStateFromCoords(lat, lng) {
+            console.log(`Detecting state from coords: ${lat}, ${lng}`);
+            
+            for (const [code, bounds] of Object.entries(STATE_BOUNDARIES)) {
+                if (lat >= bounds.lat[0] && lat <= bounds.lat[1] &&
+                    lng >= bounds.lng[0] && lng <= bounds.lng[1]) {
+                    console.log(`Matched state: ${code}`);
+                    return code;
+                }
+            }
+            console.log('No state match found');
+            return null;
+        }
+
+        async function getUserLocation() {
+            return new Promise((resolve) => {
+                if (!navigator.geolocation) {
+                    console.log('Geolocation not supported');
+                    resolve(null);
+                    return;
+                }
+
+                console.log('Requesting geolocation...');
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const { latitude, longitude } = position.coords;
+                        console.log(`Location obtained: ${latitude}, ${longitude}`);
+                        const stateCode = detectStateFromCoords(latitude, longitude);
+                        resolve(stateCode);
+                    },
+                    (error) => {
+                        console.log('Geolocation error:', error.message);
+                        resolve(null);
+                    },
+                    { timeout: 5000, enableHighAccuracy: false }
+                );
+            });
+        }
 
         // --- 1. US FLAG LOGIC ---
         function updateUSVisuals(usStatus) {
@@ -297,10 +408,14 @@
             grid.innerHTML = '';
             statesData.forEach(state => {
                 const el = document.createElement('div');
+                const isUserLocation = state.code === detectedStateCode;
                 el.className = "hover-trigger border border-white/10 p-4 cursor-pointer transition-all flex justify-between items-center group";
                 el.innerHTML = `
                     <div>
-                        <div class="mono text-xs text-gray-500 group-hover:text-[#D2FF00]">${state.code}</div>
+                        <div class="mono text-xs text-gray-500 group-hover:text-[#D2FF00] flex items-center gap-2">
+                            ${state.code}
+                            ${isUserLocation ? '<span class="location-indicator" style="margin: 0;">YOUR LOCATION</span>' : ''}
+                        </div>
                         <div class="font-bold text-lg">${state.name}</div>
                     </div>
                     <div class="mono text-[10px] ${state.status === 'HALF' ? 'text-red-500' : 'text-[#D2FF00]'}">
@@ -319,6 +434,14 @@
         function selectState(state, isInitial = false) {
             currentState = state;
             updateTime();
+            
+            // Show/hide location badge
+            const locationBadge = document.getElementById('location-badge');
+            if (state.code === detectedStateCode) {
+                locationBadge.style.display = 'inline-block';
+            } else {
+                locationBadge.style.display = 'none';
+            }
             
             // Close modal if open
             if (document.getElementById('state-selector').classList.contains('active')) {
@@ -396,6 +519,11 @@
         // --- 3. INIT & APP START ---
         async function initializeApp() {
             try {
+                // 0. Get user location first
+                console.log('Getting user location...');
+                detectedStateCode = await getUserLocation();
+                console.log('Detected state code:', detectedStateCode);
+
                 // 1. Fetch US Data
                 const usRes = await fetch(`${API_BASE_URL}/getUSStatus`);
                 const usData = await usRes.json();
@@ -406,8 +534,16 @@
                 statesData = await stateRes.json();
                 populateStateSelector();
 
-                // 3. Select Initial State (Default VA)
-                const initialState = statesData.find(s => s.code === 'VA') || statesData[0];
+                // 3. Select Initial State (User's location or default VA)
+                let initialState;
+                if (detectedStateCode) {
+                    initialState = statesData.find(s => s.code === detectedStateCode);
+                    console.log('Using user location state:', initialState);
+                }
+                if (!initialState) {
+                    initialState = statesData.find(s => s.code === 'VA') || statesData[0];
+                    console.log('Using fallback state:', initialState);
+                }
                 selectState(initialState, true);
 
                 // Intro Anims
