@@ -34,7 +34,16 @@ export default async function handler(req, res) {
   try {
     const sql = neon(process.env.DATABASE_URL);
 
-    // Fetch all active half-mast orders for states
+    // STEP 1: Clean up expired orders (set half_mast = false where end_date has passed)
+    await sql`
+        UPDATE flag_status
+        SET half_mast = false, updated_at = NOW()
+        WHERE half_mast = true 
+        AND end_date IS NOT NULL 
+        AND end_date < NOW();
+    `;
+
+    // STEP 2: Fetch all active half-mast orders for states
     const activeOrders = await sql`
         SELECT state_code, reason, end_date, half_mast
         FROM flag_status

@@ -3,12 +3,22 @@ import { neon } from "@neondatabase/serverless";
 
 /**
  * Fetches the current US National Flag status from the Neon database.
+ * Automatically resets expired half-mast orders to full staff.
  */
 export default async function handler(req, res) {
   try {
     const sql = neon(process.env.DATABASE_URL);
 
-    // Query for the US National Flag status (state_code is NULL)
+    // STEP 1: Clean up expired orders (set half_mast = false where end_date has passed)
+    await sql`
+        UPDATE flag_status
+        SET half_mast = false, updated_at = NOW()
+        WHERE half_mast = true 
+        AND end_date IS NOT NULL 
+        AND end_date < NOW();
+    `;
+
+    // STEP 2: Query for the US National Flag status (state_code is NULL)
     const result = await sql`
         SELECT reason, end_date, half_mast
         FROM flag_status
