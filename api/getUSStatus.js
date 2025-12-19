@@ -10,12 +10,13 @@ export default async function handler(req, res) {
     const sql = neon(process.env.DATABASE_URL);
 
     // STEP 1: Clean up expired orders (set half_mast = false where end_date has passed)
+    const now = new Date().toISOString();
     await sql`
         UPDATE flag_status
-        SET half_mast = false, updated_at = NOW()
+        SET half_mast = false, updated_at = ${now}
         WHERE half_mast = true 
         AND end_date IS NOT NULL 
-        AND end_date < NOW();
+        AND end_date::timestamp < ${now}::timestamp
     `;
 
     // STEP 2: Query for the US National Flag status (state_code is NULL)
