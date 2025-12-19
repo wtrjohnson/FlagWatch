@@ -37,10 +37,10 @@ export default async function handler(req, res) {
     // STEP 1: Clean up expired orders (set half_mast = false where end_date has passed)
     await sql`
         UPDATE flag_status
-        SET half_mast = false, updated_at = NOW()
+        SET half_mast = false, updated_at = CURRENT_TIMESTAMP
         WHERE half_mast = true 
         AND end_date IS NOT NULL 
-        AND end_date < NOW();
+        AND end_date < CURRENT_TIMESTAMP
     `;
 
     // STEP 2: Fetch all active half-mast orders for states
