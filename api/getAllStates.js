@@ -1,12 +1,13 @@
 // api/getAllStates.js
 import { neon } from "@neondatabase/serverless";
 
-// Static reference data for all 50 states (Only Code and Name are critical)
+// Static reference data for all 50 states + DC (Only Code and Name are critical)
 const STATE_LOOKUP = [
     { code: "AL", name: "ALABAMA" }, { code: "AK", name: "ALASKA" }, 
     { code: "AZ", name: "ARIZONA" }, { code: "AR", name: "ARKANSAS" }, 
     { code: "CA", name: "CALIFORNIA" }, { code: "CO", name: "COLORADO" }, 
     { code: "CT", name: "CONNECTICUT" }, { code: "DE", name: "DELAWARE" },
+    { code: "DC", name: "WASHINGTON DC" },
     { code: "FL", name: "FLORIDA" }, { code: "GA", name: "GEORGIA" }, 
     { code: "HI", name: "HAWAII" }, { code: "ID", name: "IDAHO" }, 
     { code: "IL", name: "ILLINOIS" }, { code: "IN", name: "INDIANA" }, 
