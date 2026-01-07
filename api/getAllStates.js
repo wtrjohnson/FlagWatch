@@ -96,9 +96,9 @@ export default async function handler(req, res) {
 
     const activeMap = new Map();
     activeOrders.forEach(order => {
-        // Simple duration calculation based on the database field
+        // Use the end_date string directly (already in "Month Day" format)
         const duration = order.end_date 
-            ? `Until ${new Date(order.end_date).toLocaleDateString()}` 
+            ? `Until ${order.end_date}` 
             : "Until further notice";
         
         activeMap.set(order.state_code, {
