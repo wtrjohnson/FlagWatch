@@ -146,8 +146,45 @@ function detectNational(subject) {
 
 function extractDates(text) {
   if (!text) return { start: null, end: null };
+  
+  // Try to find date ranges first (e.g., "January 6-7" or "January 6 through January 7")
+  const rangePatterns = [
+    /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\s*[-–—]\s*(\d{1,2})/i,
+    /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})\s+(?:through|to)\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2})/i
+  ];
+  
+  // Check for "Month Day-Day" format (e.g., "January 6-7")
+  const rangeMatch = text.match(rangePatterns[0]);
+  if (rangeMatch) {
+    const month = rangeMatch[1];
+    const startDay = rangeMatch[2];
+    const endDay = rangeMatch[3];
+    console.log(`📅 Found date range: ${month} ${startDay}-${endDay}`);
+    return {
+      start: `${month} ${startDay}`,
+      end: `${month} ${endDay}`
+    };
+  }
+  
+  // Check for "Month Day through Month Day" format
+  const throughMatch = text.match(rangePatterns[1]);
+  if (throughMatch) {
+    const startMonth = throughMatch[1];
+    const startDay = throughMatch[2];
+    const endMonth = throughMatch[3];
+    const endDay = throughMatch[4];
+    console.log(`📅 Found date range: ${startMonth} ${startDay} through ${endMonth} ${endDay}`);
+    return {
+      start: `${startMonth} ${startDay}`,
+      end: `${endMonth} ${endDay}`
+    };
+  }
+  
+  // Fall back to finding individual dates
   const regex = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}/gi;
   const matches = [...text.matchAll(regex)];
+  
+  console.log(`📅 Found ${matches.length} individual dates`);
 
   return {
     start: matches[0]?.[0] || null,
