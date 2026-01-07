@@ -800,4 +800,112 @@
             }
         }
 
-        function updateStateText(state, effectiveStatus, effectiveReason, effect
+      function updateStateText(state, effectiveStatus, effectiveReason, effectiveReasonDetail, effectiveDuration) {
+            document.getElementById('state-name').innerText = state.name;
+            document.getElementById('state-code').innerText = state.code;
+            
+            const reasonDisplay = document.getElementById('state-reason-display');
+            const badge = document.getElementById('state-badge');
+            
+            if(effectiveStatus === 'HALF') {
+                badge.className = "status-badge border-red-900/50 bg-red-900/10";
+                badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
+                
+                // Show honor message
+                reasonDisplay.style.display = 'block';
+                document.getElementById('state-reason').textContent = effectiveReason;
+                document.getElementById('state-reason-detail').textContent = effectiveReasonDetail || '';
+                document.getElementById('state-duration').textContent = effectiveDuration;
+            } else {
+                badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
+                badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
+                
+                // Hide message completely
+                reasonDisplay.style.display = 'none';
+            }
+
+            // Update both ticker instances
+            document.getElementById('ticker-state-code').innerText = state.code;
+            document.getElementById('ticker-state-code-2').innerText = state.code;
+            document.getElementById('ticker-order').innerText = `Current Order: ${effectiveStatus}`;
+            document.getElementById('ticker-order-2').innerText = `Current Order: ${effectiveStatus}`;
+        }
+
+        function renderStateFlag(state) {
+            const wrapper = document.getElementById('state-flag-wrapper');
+            wrapper.innerHTML = '';
+            
+            const flag = document.createElement('div');
+            flag.className = "flag";
+            
+            const imagePath = `FlagIcons/${state.code}.svg`;
+
+            flag.innerHTML = `
+                <img src="${imagePath}" alt="${state.name}" onerror="this.onerror=null;this.src='FlagIcons/default.svg';">
+                <div class="grommet top"></div><div class="grommet bottom"></div>
+                <div class="absolute inset-0 bg-gradient-to-tr from-black/30 to-transparent"></div>
+            `;
+            wrapper.appendChild(flag);
+        }
+
+        // --- 3. INIT & APP START ---
+        async function initializeApp() {
+            try {
+                console.log('Getting user location...');
+                detectedStateCode = await getUserLocation();
+                console.log('Detected state code:', detectedStateCode);
+
+                const usRes = await fetch(`${API_BASE_URL}/getUSStatus`);
+                const usData = await usRes.json();
+                updateUSVisuals(usData);
+
+                const stateRes = await fetch(`${API_BASE_URL}/getAllStates`);
+                statesData = await stateRes.json();
+                populateStateSelector();
+
+                let initialState;
+                if (detectedStateCode) {
+                    initialState = statesData.find(s => s.code === detectedStateCode);
+                    console.log('Using user location state:', initialState);
+                }
+                if (!initialState) {
+                    initialState = statesData.find(s => s.code === 'VA') || statesData[0];
+                    console.log('Using fallback state:', initialState);
+                }
+                selectState(initialState, true);
+
+                gsap.from(".animate-in", { opacity: 0, y: 20, duration: 1, stagger: 0.1, delay: 0.5 });
+
+            } catch (error) {
+                console.error("Initialization Failed:", error);
+                document.getElementById('main-wrapper').innerHTML = `
+                    <div class="w-full h-full flex items-center justify-center text-red-500 font-bold mono">
+                        SYSTEM ERROR: DB CONNECTION FAILED
+                    </div>
+                `;
+            }
+        }
+
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US');
+            document.getElementById('ticker-time').textContent = timeStr;
+            document.getElementById('ticker-time-2').textContent = timeStr;
+        }
+
+        function updateTimeDisplay() {
+            if (lastUpdateTime) {
+                document.getElementById('time-display').textContent = lastUpdateTime.toLocaleTimeString('en-US') + " EST";
+            }
+        }
+
+        const centerDivider = document.getElementById('center-divider');
+        const mainWrapper = document.getElementById('main-wrapper');
+        centerDivider.addEventListener('mouseenter', () => mainWrapper.classList.add('center-hover-active'));
+        centerDivider.addEventListener('mouseleave', () => mainWrapper.classList.remove('center-hover-active'));
+
+        setInterval(updateTime, 1000);
+        initializeApp();
+    </script>
+</body>
+</html>
