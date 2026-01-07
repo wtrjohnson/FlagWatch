@@ -408,6 +408,7 @@
         let currentState = null;
         let detectedStateCode = null;
         let lastUpdateTime = null;
+        let usStatusGlobal = null; // Store US status for federal override logic
 
         // --- GEOLOCATION FUNCTIONS ---
         
@@ -511,16 +512,21 @@
             const badge = document.getElementById('us-badge');
             const reasonDisplay = document.getElementById('us-reason-display');
             
+            // Store globally for federal override logic
+            usStatusGlobal = usStatus;
+            
             // Update the "last updated" time when US flag loads
             lastUpdateTime = new Date();
             updateTimeDisplay();
             
             const ticker = document.getElementById('ticker-national');
             
-            let targetY = 20; // Full staff
+            // Animation sequence: Start at bottom → Rise to full → Pause → Lower to half if needed
+            const fullStaffY = 20;
+            const halfStaffY = 160;
+            const targetY = usStatus.status === 'HALF' ? halfStaffY : fullStaffY;
 
             if (usStatus.status === 'HALF') {
-                targetY = 160; 
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
                 
@@ -543,11 +549,18 @@
                 document.getElementById('ticker-national-2').innerText = "GREEN";
             }
             
-            // Drop-in Animation
-            gsap.fromTo(flagWrapper, 
-                { y: 300, opacity: 0 }, 
-                { y: targetY, opacity: 1, duration: 2, ease: "power2.out", delay: 0.2 }
-            ); 
+            // Flag Protocol Animation: Rise → Pause → Lower (if needed)
+            gsap.timeline()
+                .fromTo(flagWrapper, 
+                    { y: 500, opacity: 0 }, 
+                    { y: fullStaffY, opacity: 1, duration: 1, ease: "power2.out", delay: 0.2 }
+                )
+                .to(flagWrapper, { duration: 0.5 }) // Pause at full staff
+                .to(flagWrapper, { 
+                    y: targetY, 
+                    duration: usStatus.status === 'HALF' ? 2 : 0, 
+                    ease: "power1.inOut" 
+                });
         }
 
         // --- 2. STATE LOGIC ---
@@ -614,13 +627,19 @@
             // Clear existing paths
             svg.innerHTML = '';
             
+            // Check if US is at half-staff for federal override
+            const usFederalOrder = usStatusGlobal && usStatusGlobal.status === 'HALF';
+            
             // Create path for each state
             statesData.forEach(state => {
                 if (!STATE_PATHS[state.code]) return;
                 
+                // Federal override: if US is at half-staff, all states are at half-staff
+                const effectiveStatus = usFederalOrder ? 'HALF' : state.status;
+                
                 const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
                 path.setAttribute('d', STATE_PATHS[state.code]);
-                path.setAttribute('class', `state-path ${state.status === 'HALF' ? 'half-staff' : 'full-staff'}`);
+                path.setAttribute('class', `state-path ${effectiveStatus === 'HALF' ? 'half-staff' : 'full-staff'}`);
                 path.setAttribute('data-state', state.code);
                 
                 // Add selected class if this is the current state
@@ -637,7 +656,7 @@
                 // Hover tooltip
                 path.addEventListener('mouseenter', (e) => {
                     tooltip.querySelector('#tooltip-name').textContent = state.name;
-                    tooltip.querySelector('#tooltip-status').textContent = `${state.status} STAFF`;
+                    tooltip.querySelector('#tooltip-status').textContent = `${effectiveStatus} STAFF`;
                     tooltip.classList.add('visible');
                 });
                 
@@ -657,7 +676,14 @@
         function populateStateSelector() {
             const grid = document.getElementById('state-grid');
             grid.innerHTML = '';
+            
+            // Check if US is at half-staff for federal override
+            const usFederalOrder = usStatusGlobal && usStatusGlobal.status === 'HALF';
+            
             statesData.forEach(state => {
+                // Federal override: if US is at half-staff, all states are at half-staff
+                const effectiveStatus = usFederalOrder ? 'HALF' : state.status;
+                
                 const el = document.createElement('div');
                 const isUserLocation = state.code === detectedStateCode;
                 el.className = "hover-trigger border border-white/10 p-4 cursor-pointer transition-all flex justify-between items-center group";
@@ -669,8 +695,8 @@
                         </div>
                         <div class="font-bold text-lg">${state.name}</div>
                     </div>
-                    <div class="mono text-[10px] ${state.status === 'HALF' ? 'text-red-500' : 'text-[#D2FF00]'}">
-                        ${state.status} STAFF
+                    <div class="mono text-[10px] ${effectiveStatus === 'HALF' ? 'text-red-500' : 'text-[#D2FF00]'}">
+                        ${effectiveStatus} STAFF
                     </div>
                 `;
                 el.onclick = () => selectState(state);
@@ -711,48 +737,88 @@
                 toggleStateSelector();
             }
 
+            // Federal Override Logic: If US is at half-staff, state must follow
+            let effectiveStatus = state.status;
+            let effectiveReason = state.reason;
+            let effectiveDuration = state.duration;
+            
+            if (usStatusGlobal && usStatusGlobal.status === 'HALF') {
+                effectiveStatus = 'HALF';
+                
+                // Use federal reason if state doesn't have its own order, or if following federal
+                if (state.status === 'FULL') {
+                    effectiveReason = "In Accordance with Federal Order";
+                    effectiveDuration = usStatusGlobal.duration;
+                } else {
+                    // State has its own order too - use whichever duration is longer
+                    effectiveReason = state.reason;
+                    // Simple comparison: just show the state's duration for now
+                    // (Could enhance this to actually compare dates)
+                    effectiveDuration = state.duration;
+                }
+            }
+
             // Flag Animation & Visuals
-            const targetY = state.status === 'HALF' ? 160 : 20;
+            const fullStaffY = 20;
+            const halfStaffY = 160;
+            const targetY = effectiveStatus === 'HALF' ? halfStaffY : fullStaffY;
             const flagWrapper = document.getElementById('state-flag-wrapper');
 
             const runVisualUpdate = () => {
-                updateStateText(state);
+                updateStateText(state, effectiveStatus, effectiveReason, effectiveDuration);
                 renderStateFlag(state);
             };
 
             if (isInitial) {
                 runVisualUpdate();
-                gsap.set(flagWrapper, { y: targetY });
-                gsap.from(flagWrapper, { y: 300, opacity: 0, duration: 2, ease: "power2.out", delay: 0.4 });
+                
+                // Flag Protocol Animation: Rise → Pause → Lower (if needed)
+                gsap.timeline()
+                    .fromTo(flagWrapper, 
+                        { y: 500, opacity: 0 }, 
+                        { y: fullStaffY, opacity: 1, duration: 1, ease: "power2.out", delay: 0.4 }
+                    )
+                    .to(flagWrapper, { duration: 0.5 }) // Pause at full staff
+                    .to(flagWrapper, { 
+                        y: targetY, 
+                        duration: effectiveStatus === 'HALF' ? 2 : 0, 
+                        ease: "power1.inOut" 
+                    });
             } else {
-                gsap.to(flagWrapper, {
-                    y: 500, opacity: 0, duration: 0.8, ease: "power2.in",
-                    onComplete: () => {
-                        runVisualUpdate();
-                        gsap.fromTo(flagWrapper, 
-                            { y: 500, opacity: 0 },
-                            { y: targetY, opacity: 1, duration: 2, ease: "elastic.out(1, 0.75)" }
-                        );
-                    }
-                });
+                // Switching states - drop out old flag, rise and potentially lower new one
+                gsap.timeline()
+                    .to(flagWrapper, {
+                        y: 500, opacity: 0, duration: 0.8, ease: "power2.in"
+                    })
+                    .call(() => runVisualUpdate())
+                    .fromTo(flagWrapper, 
+                        { y: 500, opacity: 0 },
+                        { y: fullStaffY, opacity: 1, duration: 1, ease: "power2.out" }
+                    )
+                    .to(flagWrapper, { duration: 0.5 }) // Pause at full staff
+                    .to(flagWrapper, { 
+                        y: targetY, 
+                        duration: effectiveStatus === 'HALF' ? 2 : 0, 
+                        ease: "power1.inOut" 
+                    });
             }
         }
 
-        function updateStateText(state) {
+        function updateStateText(state, effectiveStatus, effectiveReason, effectiveDuration) {
             document.getElementById('state-name').innerText = state.name;
             document.getElementById('state-code').innerText = state.code;
             
             const reasonDisplay = document.getElementById('state-reason-display');
             const badge = document.getElementById('state-badge');
             
-            if(state.status === 'HALF') {
+            if(effectiveStatus === 'HALF') {
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
                 
                 // Show honor message
                 reasonDisplay.style.display = 'block';
-                document.getElementById('state-reason').textContent = state.reason;
-                document.getElementById('state-duration').textContent = state.duration;
+                document.getElementById('state-reason').textContent = effectiveReason;
+                document.getElementById('state-duration').textContent = effectiveDuration;
             } else {
                 badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
                 badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
@@ -764,8 +830,8 @@
             // Update both ticker instances
             document.getElementById('ticker-state-code').innerText = state.code;
             document.getElementById('ticker-state-code-2').innerText = state.code;
-            document.getElementById('ticker-order').innerText = `Current Order: ${state.status}`;
-            document.getElementById('ticker-order-2').innerText = `Current Order: ${state.status}`;
+            document.getElementById('ticker-order').innerText = `Current Order: ${effectiveStatus}`;
+            document.getElementById('ticker-order-2').innerText = `Current Order: ${effectiveStatus}`;
         }
 
         function renderStateFlag(state) {
