@@ -62,7 +62,7 @@ export default async function handler(req, res) {
 
     // STEP 2: Query for the US National Flag status (state_code is NULL)
     const result = await sql`
-        SELECT reason, end_date, half_mast
+        SELECT reason, reason_detail, end_date, half_mast
         FROM flag_status
         WHERE country_code = 'US' AND state_code IS NULL
         ORDER BY updated_at DESC
@@ -92,6 +92,7 @@ export default async function handler(req, res) {
             usStatusData = {
                 status: "HALF",
                 reason: record.reason || "Presidential Proclamation",
+                reason_detail: record.reason_detail || null,
                 duration: duration
             };
         } else {
@@ -99,6 +100,7 @@ export default async function handler(req, res) {
             usStatusData = {
                 status: "FULL",
                 reason: record.reason || "Standard Protocols",
+                reason_detail: null,
                 duration: "Indefinite"
             };
         }

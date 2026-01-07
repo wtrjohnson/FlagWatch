@@ -89,7 +89,7 @@ export default async function handler(req, res) {
 
     // STEP 2: Fetch all active half-mast orders for states
     const activeOrders = await sql`
-        SELECT state_code, reason, end_date, half_mast
+        SELECT state_code, reason, reason_detail, end_date, half_mast
         FROM flag_status
         WHERE state_code IS NOT NULL AND half_mast = true;
     `;
@@ -104,6 +104,7 @@ export default async function handler(req, res) {
         activeMap.set(order.state_code, {
             status: order.half_mast ? "HALF" : "FULL",
             reason: order.reason || "Governor's Order",
+            reason_detail: order.reason_detail || null,
             duration: duration
         });
     });
@@ -124,6 +125,7 @@ export default async function handler(req, res) {
                 ...state,
                 status: "FULL",
                 reason: "No active orders",
+                reason_detail: null,
                 duration: "Indefinite"
             };
         }

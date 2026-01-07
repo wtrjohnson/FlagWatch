@@ -16,7 +16,7 @@ async function summarizeReason(rawEmailText) {
   // Check if API key exists
   if (!process.env.ANTHROPIC_API_KEY) {
     console.log("⚠️  No ANTHROPIC_API_KEY found, falling back to regex extraction");
-    return null;
+    return { reason: null, reason_detail: null };
   }
 
   try {
@@ -31,19 +31,26 @@ async function summarizeReason(rawEmailText) {
       },
       body: JSON.stringify({
         model: "claude-3-haiku-20240307", // Cheapest model, perfect for this task
-        max_tokens: 100,
+        max_tokens: 150,
         messages: [{
           role: "user",
-          content: `You are extracting information from a flag order email. Extract who or what this flag order honors.
+          content: `Extract information from this flag order email. Return ONLY valid JSON with no markdown formatting, preamble, or explanation.
 
-Return ONLY a clean, specific 2-8 word phrase describing the person, event, or group being honored.
+Required format:
+{
+  "reason": "name or event",
+  "reason_detail": "brief description of what happened"
+}
 
-Examples of good responses:
-- "Former Senator John Smith"
-- "Victims of California Wildfires"
-- "National Peace Officers"
-- "Pearl Harbor Remembrance Day"
-- "Governor Jane Doe"
+Rules:
+- "reason": Extract ONLY the person's name (no titles) OR event name. For multiple people, list all names separated by "and".
+- "reason_detail": Brief description of what happened (e.g., "Police Officer killed in line of duty", "Victims of wildfire disaster"). Keep under 10 words.
+- For commemorative events (Pearl Harbor, 9/11, etc.), "reason" is the event name, "reason_detail" describes significance.
+
+Examples:
+Person: {"reason": "Stephen LaPorta", "reason_detail": "Police Officer killed in line of duty"}
+Multiple: {"reason": "John Smith and Jane Doe", "reason_detail": "State Senators who passed away"}
+Event: {"reason": "Pearl Harbor Remembrance Day", "reason_detail": "Honoring those who served"}
 
 Email text:
 ${rawEmailText.slice(0, 1500)}`
@@ -54,30 +61,41 @@ ${rawEmailText.slice(0, 1500)}`
     if (!response.ok) {
       const errorText = await response.text();
       console.error("❌ API Error:", response.status, errorText);
-      return null;
+      return { reason: null, reason_detail: null };
     }
 
     const data = await response.json();
     
     if (data.content && data.content[0] && data.content[0].text) {
       const summary = data.content[0].text.trim();
-      console.log("✅ AI extracted reason:", summary);
-      return summary;
+      console.log("✅ AI raw response:", summary);
+      
+      // Clean any markdown formatting
+      const cleaned = summary.replace(/```json|```/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+      
+      console.log("✅ AI extracted - reason:", parsed.reason);
+      console.log("✅ AI extracted - reason_detail:", parsed.reason_detail);
+      
+      return {
+        reason: parsed.reason || null,
+        reason_detail: parsed.reason_detail || null
+      };
     }
     
     console.log("⚠️  No content in AI response");
-    return null;
+    return { reason: null, reason_detail: null };
   } catch (error) {
     console.error("❌ AI summarization failed:", error.message);
-    return null;
+    return { reason: null, reason_detail: null };
   }
 }
 
 /** Fallback: Extract reason with regex */
 function extractReasonFallback(text) {
-  if (!text) return null;
+  if (!text) return { reason: null, reason_detail: null };
   
-  // Try multiple patterns
+  // Try multiple patterns for the name
   const patterns = [
     /in honor of ([^.,\n]+)/i,
     /in memory of ([^.,\n]+)/i,
@@ -85,16 +103,23 @@ function extractReasonFallback(text) {
     /for ([^.,\n]+)/i
   ];
   
+  let reason = null;
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
-      console.log("📝 Regex extracted reason:", match[1].trim());
-      return match[1].trim();
+      reason = match[1].trim();
+      console.log("📝 Regex extracted reason:", reason);
+      break;
     }
   }
   
-  console.log("⚠️  No reason found with regex");
-  return "Governor's Order";
+  if (!reason) {
+    console.log("⚠️  No reason found with regex");
+    reason = "Governor's Order";
+  }
+  
+  // For fallback, we can't reliably extract detail, so leave it null
+  return { reason, reason_detail: null };
 }
 
 function detectState(subject) {
@@ -250,13 +275,17 @@ export default async function handler(req, res) {
   }
 
   // Extract reason with AI (with fallback)
-  let reason = await summarizeReason(emailText);
-  if (!reason) {
+  let reasonData = await summarizeReason(emailText);
+  if (!reasonData.reason) {
     console.log("⚠️  AI failed, using regex fallback");
-    reason = extractReasonFallback(emailText);
+    reasonData = extractReasonFallback(emailText);
   }
   
+  const reason = reasonData.reason;
+  const reasonDetail = reasonData.reason_detail;
+  
   console.log("📝 Final reason:", reason);
+  console.log("📝 Final reason_detail:", reasonDetail);
 
   const { start, end } = extractDates(emailText);
   console.log("📅 Start date:", start);
@@ -268,12 +297,13 @@ export default async function handler(req, res) {
     if (isNational) {
       console.log("💾 Inserting NATIONAL flag order...");
       await sql`
-        INSERT INTO flag_status (country_code, state_code, half_mast, reason, start_date, end_date, raw_email)
-        VALUES ('US', NULL, true, ${reason}, ${start}, ${end}, ${emailText})
+        INSERT INTO flag_status (country_code, state_code, half_mast, reason, reason_detail, start_date, end_date, raw_email)
+        VALUES ('US', NULL, true, ${reason}, ${reasonDetail}, ${start}, ${end}, ${emailText})
         ON CONFLICT (country_code, state_code)
         DO UPDATE SET
           half_mast = EXCLUDED.half_mast,
           reason = EXCLUDED.reason,
+          reason_detail = EXCLUDED.reason_detail,
           start_date = EXCLUDED.start_date,
           end_date = EXCLUDED.end_date,
           raw_email = EXCLUDED.raw_email,
@@ -282,12 +312,13 @@ export default async function handler(req, res) {
     } else {
       console.log(`💾 Inserting STATE flag order for ${stateCode}...`);
       await sql`
-        INSERT INTO flag_status (country_code, state_code, half_mast, reason, start_date, end_date, raw_email)
-        VALUES ('US', ${stateCode.toUpperCase()}, true, ${reason}, ${start}, ${end}, ${emailText})
+        INSERT INTO flag_status (country_code, state_code, half_mast, reason, reason_detail, start_date, end_date, raw_email)
+        VALUES ('US', ${stateCode.toUpperCase()}, true, ${reason}, ${reasonDetail}, ${start}, ${end}, ${emailText})
         ON CONFLICT (country_code, state_code)
         DO UPDATE SET
           half_mast = EXCLUDED.half_mast,
           reason = EXCLUDED.reason,
+          reason_detail = EXCLUDED.reason_detail,
           start_date = EXCLUDED.start_date,
           end_date = EXCLUDED.end_date,
           raw_email = EXCLUDED.raw_email,
