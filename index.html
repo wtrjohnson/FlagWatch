@@ -121,7 +121,13 @@
         }
 
         .reason-overlay {
-            max-width: 320px;
+            position: absolute;
+            top: 50%;
+            left: 3rem;
+            transform: translateY(-50%);
+            max-width: 400px;
+            z-index: 40;
+            pointer-events: none;
         }
 
         .location-indicator {
@@ -163,38 +169,36 @@
             <section class="split-pane relative w-full md:w-1/2 h-full border-r border-white/5 flex flex-col items-center justify-center group overflow-hidden">
                 <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:40px_40px] opacity-20"></div>
 
-                <div class="relative z-30 w-full h-full flex flex-col justify-between p-12">
-                    <div class="animate-in">
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <div class="mono text-xs text-gray-500 mb-1">JURISDICTION</div>
-                                <h2 class="text-3xl font-bold tracking-tight">UNITED STATES</h2>
-                            </div>
-                            <div class="status-badge" id="us-badge"><div class="status-dot green"></div> FULL STAFF</div>
+                <!-- Header - Fixed at top -->
+                <div class="absolute top-0 left-0 right-0 z-30 p-12">
+                    <div class="flex justify-between items-start animate-in">
+                        <div>
+                            <div class="mono text-xs text-gray-500 mb-1">JURISDICTION</div>
+                            <h2 class="text-3xl font-bold tracking-tight">UNITED STATES</h2>
                         </div>
-                        
-                        <!-- US Reasoning Block -->
-                        <div class="reason-overlay" id="us-reason-display" style="display: none;">
-                            <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px; line-height: 1.2;">in honor of</div>
-                            <div class="text-2xl font-bold text-white" style="line-height: 1.1;" id="us-reason">--</div>
-                            <div class="text-red-400 text-sm font-bold mt-1" id="us-duration">--</div>
-                        </div>
+                        <div class="status-badge" id="us-badge"><div class="status-dot green"></div> FULL STAFF</div>
                     </div>
+                </div>
 
-                    <div class="flex-grow flex items-center justify-center relative my-8">
-                        <div class="relative h-[500px] w-20 flex justify-center z-0">
-                            <div class="mast-light"></div><div class="mast-fog"></div>
-                            <div class="mast-structure"><div class="mast-finial"></div></div>
-                            <div class="mast-halyard"></div>
-                            <div class="flag-group" id="us-flag-wrapper">
-                                <div class="flag us-flag">
-                                    <div class="us-canton"></div>
-                                    <div class="grommet top"></div><div class="grommet bottom"></div>
-                                    <div class="absolute inset-0 bg-gradient-to-tr from-black/30 to-transparent"></div>
-                                </div>
-                            </div>
+                <!-- Flagpole - Always centered -->
+                <div class="relative h-[500px] w-20 flex justify-center z-20">
+                    <div class="mast-light"></div><div class="mast-fog"></div>
+                    <div class="mast-structure"><div class="mast-finial"></div></div>
+                    <div class="mast-halyard"></div>
+                    <div class="flag-group" id="us-flag-wrapper">
+                        <div class="flag us-flag">
+                            <div class="us-canton"></div>
+                            <div class="grommet top"></div><div class="grommet bottom"></div>
+                            <div class="absolute inset-0 bg-gradient-to-tr from-black/30 to-transparent"></div>
                         </div>
                     </div>
+                </div>
+                
+                <!-- Order Message - Centered overlay -->
+                <div class="reason-overlay" id="us-reason-display" style="display: none;">
+                    <div class="italic text-gray-300 mb-2" style="font-family: 'Georgia', serif; font-size: 20px; line-height: 1.2;">in honor of</div>
+                    <div class="text-3xl font-bold text-white mb-2" style="line-height: 1.1;" id="us-reason">--</div>
+                    <div class="text-red-400 text-base font-bold" id="us-duration">--</div>
                 </div>
             </section>
 
@@ -202,41 +206,38 @@
             <section class="split-pane relative w-full md:w-1/2 h-full flex flex-col items-center justify-center group overflow-hidden bg-[#080808]">
                 <div class="absolute top-1/2 right-0 w-[400px] h-[400px] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none"></div>
 
-                <div class="relative z-30 w-full h-full flex flex-col justify-between p-12">
-                    <div class="animate-in w-full">
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <div class="flex items-center gap-2 mb-1 cursor-pointer hover:text-[#D2FF00] transition-colors hover-trigger" onclick="toggleStateSelector()">
-                                    <span class="mono text-xs text-gray-500">STATE: <span id="state-code">--</span></span>
-                                    <span class="text-[10px] bg-white/10 px-1 rounded text-[#D2FF00]">CHANGE ▼</span>
-                                </div>
-                                <h2 class="text-3xl font-bold tracking-tight flex items-center gap-2">
-                                    <span id="state-name">LOADING...</span>
-                                    <span id="location-badge" class="location-indicator" style="display: none;">YOUR LOCATION</span>
-                                </h2>
+                <!-- Header - Fixed at top -->
+                <div class="absolute top-0 left-0 right-0 z-30 p-12">
+                    <div class="flex justify-between items-start animate-in">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1 cursor-pointer hover:text-[#D2FF00] transition-colors hover-trigger" onclick="toggleStateSelector()">
+                                <span class="mono text-xs text-gray-500">STATE: <span id="state-code">--</span></span>
+                                <span class="text-[10px] bg-white/10 px-1 rounded text-[#D2FF00]">CHANGE ▼</span>
                             </div>
-                            <div class="status-badge border-gray-600/50 bg-gray-900/10" id="state-badge">
-                                <div class="status-dot" style="background:#555; box-shadow:0 0 5px #555;"></div> INIT...
-                            </div>
+                            <h2 class="text-3xl font-bold tracking-tight flex items-center gap-2">
+                                <span id="state-name">LOADING...</span>
+                                <span id="location-badge" class="location-indicator" style="display: none;">YOUR LOCATION</span>
+                            </h2>
                         </div>
-                        
-                        <!-- State Reasoning Block -->
-                        <div class="reason-overlay" id="state-reason-display" style="display: none;">
-                            <div class="italic text-gray-300 mb-1" style="font-family: 'Georgia', serif; font-size: 18px; line-height: 1.2;">in honor of</div>
-                            <div class="text-2xl font-bold text-white" style="line-height: 1.1;" id="state-reason">--</div>
-                            <div class="text-red-400 text-sm font-bold mt-1" id="state-duration">--</div>
+                        <div class="status-badge border-gray-600/50 bg-gray-900/10" id="state-badge">
+                            <div class="status-dot" style="background:#555; box-shadow:0 0 5px #555;"></div> INIT...
                         </div>
                     </div>
+                </div>
 
-                    <div class="flex-grow flex items-center justify-center relative my-8">
-                        <div class="relative h-[500px] w-20 flex justify-center z-0">
-                            <div class="mast-light"></div><div class="mast-fog"></div>
-                            <div class="mast-structure"><div class="mast-finial"></div></div>
-                            <div class="mast-halyard"></div>
-                            <div class="flag-group" id="state-flag-wrapper">
-                                </div>
-                        </div>
-                    </div>
+                <!-- Flagpole - Always centered -->
+                <div class="relative h-[500px] w-20 flex justify-center z-20">
+                    <div class="mast-light"></div><div class="mast-fog"></div>
+                    <div class="mast-structure"><div class="mast-finial"></div></div>
+                    <div class="mast-halyard"></div>
+                    <div class="flag-group" id="state-flag-wrapper"></div>
+                </div>
+                
+                <!-- Order Message - Centered overlay -->
+                <div class="reason-overlay" id="state-reason-display" style="display: none;">
+                    <div class="italic text-gray-300 mb-2" style="font-family: 'Georgia', serif; font-size: 20px; line-height: 1.2;">in honor of</div>
+                    <div class="text-3xl font-bold text-white mb-2" style="line-height: 1.1;" id="state-reason">--</div>
+                    <div class="text-red-400 text-base font-bold" id="state-duration">--</div>
                 </div>
             </section>
         </main>
