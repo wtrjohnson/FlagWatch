@@ -84,9 +84,9 @@ export default async function handler(req, res) {
         
         // Explicitly check if half_mast is true
         if (record.half_mast === true) {
-            // Format end_date if it exists
+            // Use the end_date string directly (already in "Month Day" format)
             const duration = record.end_date 
-                ? `Until ${new Date(record.end_date).toLocaleDateString()}` 
+                ? `Until ${record.end_date}` 
                 : "Until further notice";
             
             usStatusData = {
