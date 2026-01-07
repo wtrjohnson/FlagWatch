@@ -745,17 +745,9 @@
             if (usStatusGlobal && usStatusGlobal.status === 'HALF') {
                 effectiveStatus = 'HALF';
                 
-                // Use federal reason if state doesn't have its own order, or if following federal
-                if (state.status === 'FULL') {
-                    effectiveReason = "In Accordance with Federal Order";
-                    effectiveDuration = usStatusGlobal.duration;
-                } else {
-                    // State has its own order too - use whichever duration is longer
-                    effectiveReason = state.reason;
-                    // Simple comparison: just show the state's duration for now
-                    // (Could enhance this to actually compare dates)
-                    effectiveDuration = state.duration;
-                }
+                // Always use federal reason and duration when US flag is at half-staff
+                effectiveReason = usStatusGlobal.reason;
+                effectiveDuration = usStatusGlobal.duration;
             }
 
             // Flag Animation & Visuals
