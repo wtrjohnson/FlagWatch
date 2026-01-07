@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>THE MAST | Telemetry V8</title>
+    <title>Flag Watch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -23,14 +23,9 @@
             color: var(--off-white);
             font-family: 'Satoshi', sans-serif;
             overflow-x: hidden;
-            cursor: none;
         }
 
         .mono { font-family: 'Azeret Mono', monospace; }
-        
-        /* Cursor */
-        .cursor-dot { width: 6px; height: 6px; background: var(--neon); position: fixed; border-radius: 50%; pointer-events: none; z-index: 9999; }
-        .cursor-outline { width: 30px; height: 30px; border: 1px solid var(--neon); position: fixed; border-radius: 50%; pointer-events: none; z-index: 9998; transition: transform 0.15s ease-out; box-shadow: 0 0 12px rgba(210, 255, 0, 0.4); }
         
         .noise-overlay {
             position: fixed; inset: 0; pointer-events: none; z-index: 900;
@@ -148,13 +143,11 @@
 <body class="selection:bg-[#D2FF00] selection:text-black">
     
     <div id="content-wrapper">
-        <div class="cursor-dot"></div>
-        <div class="cursor-outline"></div>
         <div class="noise-overlay"></div>
 
         <nav class="fixed top-0 w-full z-50 px-6 py-5 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-md">
             <div class="text-lg font-bold tracking-tighter flex items-center gap-2">
-                <div class="w-2 h-2 bg-[#D2FF00]"></div> THE MAST
+                <div class="w-2 h-2 bg-[#D2FF00]"></div> FLAG WATCH
             </div>
             <div class="hidden md:flex gap-6 mono text-[10px] text-gray-400">
                 <span>SYS: ONLINE</span>
@@ -621,14 +614,6 @@
                 document.getElementById('time-display').textContent = lastUpdateTime.toLocaleTimeString('en-US') + " EST";
             }
         }
-
-        const cursorDot = document.querySelector('.cursor-dot');
-        const cursorOutline = document.querySelector('.cursor-outline');
-        window.addEventListener('mousemove', (e) => {
-            cursorDot.style.left = `${e.clientX}px`;
-            cursorDot.style.top = `${e.clientY}px`;
-            cursorOutline.style.transform = `translate(${e.clientX - 15}px, ${e.clientY - 15}px)`;
-        });
 
         const centerDivider = document.getElementById('center-divider');
         const mainWrapper = document.getElementById('main-wrapper');
