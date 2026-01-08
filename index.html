@@ -800,7 +800,7 @@
             }
         }
 
-      function updateStateText(state, effectiveStatus, effectiveReason, effectiveReasonDetail, effectiveDuration) {
+ function updateStateText(state, effectiveStatus, effectiveReason, effectiveReasonDetail, effectiveDuration) {
             document.getElementById('state-name').innerText = state.name;
             document.getElementById('state-code').innerText = state.code;
             
@@ -811,7 +811,6 @@
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
                 
-                // Show honor message
                 reasonDisplay.style.display = 'block';
                 document.getElementById('state-reason').textContent = effectiveReason;
                 document.getElementById('state-reason-detail').textContent = effectiveReasonDetail || '';
@@ -820,11 +819,9 @@
                 badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
                 badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
                 
-                // Hide message completely
                 reasonDisplay.style.display = 'none';
             }
 
-            // Update both ticker instances
             document.getElementById('ticker-state-code').innerText = state.code;
             document.getElementById('ticker-state-code-2').innerText = state.code;
             document.getElementById('ticker-order').innerText = `Current Order: ${effectiveStatus}`;
@@ -837,7 +834,6 @@
             
             const flag = document.createElement('div');
             flag.className = "flag";
-            
             const imagePath = `FlagIcons/${state.code}.svg`;
 
             flag.innerHTML = `
@@ -848,7 +844,6 @@
             wrapper.appendChild(flag);
         }
 
-        // --- 3. INIT & APP START ---
         async function initializeApp() {
             try {
                 console.log('Getting user location...');
@@ -866,11 +861,9 @@
                 let initialState;
                 if (detectedStateCode) {
                     initialState = statesData.find(s => s.code === detectedStateCode);
-                    console.log('Using user location state:', initialState);
                 }
                 if (!initialState) {
                     initialState = statesData.find(s => s.code === 'VA') || statesData[0];
-                    console.log('Using fallback state:', initialState);
                 }
                 selectState(initialState, true);
 
