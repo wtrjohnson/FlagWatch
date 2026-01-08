@@ -44,12 +44,14 @@ Required format:
 
 Rules:
 - "reason": Extract ONLY the person's name (no titles) OR event name. For multiple people, list all names separated by "and".
-- "reason_detail": Brief description of what happened (e.g., "Police Officer killed in line of duty", "Victims of wildfire disaster"). Keep under 10 words.
+- "reason_detail": Brief description of what happened or why the flag is at half-staff. Examples: "Police Officer killed in line of duty", "Former State Senator", "Wildfire victims", "Pearl Harbor remembrance". Keep under 8 words. NEVER use generic phrases like "Half-Staff Alert" or "Flag Order".
 - For commemorative events (Pearl Harbor, 9/11, etc.), "reason" is the event name, "reason_detail" describes significance.
+- Look for context about the person's role, how they died, or what happened.
 
 Examples:
-Person: {"reason": "Stephen LaPorta", "reason_detail": "Police Officer killed in line of duty"}
-Multiple: {"reason": "John Smith and Jane Doe", "reason_detail": "State Senators who passed away"}
+Person killed: {"reason": "Stephen LaPorta", "reason_detail": "Police Officer killed in line of duty"}
+Former official: {"reason": "John Smith", "reason_detail": "Former State Senator"}
+Multiple: {"reason": "John Smith and Jane Doe", "reason_detail": "Victims of wildfire disaster"}
 Event: {"reason": "Pearl Harbor Remembrance Day", "reason_detail": "Honoring those who served"}
 
 Email text:
