@@ -35,14 +35,11 @@ export default async function handler(req, res) {
   try {
     const sql = neon(process.env.DATABASE_URL);
 
-    // STEP 1: Clean up expired orders
-    // Since end_date may be in "Month Day" format like "December 10", we'll handle it in JavaScript
+    // STEP 1: Clean up expired orders AND check start dates
     const allOrders = await sql`
-        SELECT id, end_date, state_code
+        SELECT id, start_date, end_date, state_code
         FROM flag_status
         WHERE half_mast = true 
-        AND end_date IS NOT NULL 
-        AND end_date != ''
         AND state_code IS NOT NULL
     `;
 
@@ -51,36 +48,45 @@ export default async function handler(req, res) {
     
     for (const order of allOrders) {
         try {
-            // Parse "December 10" or similar formats - add current year
-            const dateStr = `${order.end_date} ${now.getFullYear()}`;
-            const endDate = new Date(dateStr);
-            
-            console.log(`State ${order.state_code}: Parsing "${dateStr}"`);
-            console.log(`  -> Parsed as: ${endDate.toString()}`);
-            console.log(`  -> ISO: ${endDate.toISOString()}`);
-            console.log(`  -> Is valid? ${!isNaN(endDate.getTime())}`);
-            
-            if (isNaN(endDate.getTime())) {
-                console.error(`  -> Invalid date! Skipping.`);
-                continue;
+            // Check if order has started yet
+            if (order.start_date) {
+                const startDate = new Date(`${order.start_date} ${now.getFullYear()}`);
+                startDate.setHours(0, 0, 0, 0); // Start of day
+                
+                if (now < startDate) {
+                    console.log(`State ${order.state_code}: Order hasn't started yet (starts ${order.start_date}), setting to FULL`);
+                    await sql`
+                        UPDATE flag_status
+                        SET half_mast = false, updated_at = NOW()
+                        WHERE id = ${order.id}
+                    `;
+                    continue;
+                }
             }
             
-            // Set to end of day (11:59:59 PM) so flags stay at half-mast through the entire end date
-            endDate.setHours(23, 59, 59, 999);
-            
-            console.log(`  -> End of day: ${endDate.toString()}`);
-            console.log(`  -> Expired? ${endDate < now}`);
-            
-            // If the date is in the past, reset to full staff
-            if (endDate < now) {
-                console.log(`  -> RESETTING to full staff`);
-                await sql`
-                    UPDATE flag_status
-                    SET half_mast = false, updated_at = NOW()
-                    WHERE id = ${order.id}
-                `;
-            } else {
-                console.log(`  -> Still active, keeping at half-mast`);
+            // Check if order has expired
+            if (order.end_date && order.end_date !== '' && order.end_date !== 'TBD') {
+                const dateStr = `${order.end_date} ${now.getFullYear()}`;
+                const endDate = new Date(dateStr);
+                
+                console.log(`State ${order.state_code}: Parsing "${dateStr}"`);
+                
+                if (isNaN(endDate.getTime())) {
+                    console.error(`  -> Invalid date! Skipping.`);
+                    continue;
+                }
+                
+                endDate.setHours(23, 59, 59, 999);
+                console.log(`  -> Expired? ${endDate < now}`);
+                
+                if (endDate < now) {
+                    console.log(`  -> RESETTING to full staff`);
+                    await sql`
+                        UPDATE flag_status
+                        SET half_mast = false, updated_at = NOW()
+                        WHERE id = ${order.id}
+                    `;
+                }
             }
         } catch (e) {
             console.error(`ERROR parsing date: ${order.end_date} for state ${order.state_code}:`, e);
