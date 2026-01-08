@@ -3,7 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flag Watch</title>
+    <title>Flag Watch - Real-Time US Flag Status</title>
+    
+    <!-- Open Graph / Social Media Preview -->
+    <meta property="og:title" content="Flag Watch - Live US Flag Status" />
+    <meta property="og:description" content="Track real-time half-staff orders for US and state flags. Know when to lower your flag." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://flag-watch.vercel.app" />
+    <meta property="og:site_name" content="Flag Watch" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Flag Watch - Live US Flag Status" />
+    <meta name="twitter:description" content="Track real-time half-staff orders for US and state flags. Know when to lower your flag." />
+    
+    <!-- General Meta -->
+    <meta name="description" content="Real-time tracking of US flag half-staff orders. Monitor national and state flag status for proper flag protocol." />
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -78,7 +94,8 @@
         .map-container {
             position: relative;
             width: 100%;
-            max-width: 1000px;
+            max-width: 800px;
+            max-height: 500px;
             margin: 0 auto;
         }
 
@@ -115,9 +132,9 @@
             50% { stroke-opacity: 0.5; filter: drop-shadow(0 0 20px var(--neon)); }
         }
 
-        /* Tooltip */
+        /* Tooltip - Fixed positioning */
         .state-tooltip {
-            position: absolute;
+            position: fixed;
             background: rgba(0, 0, 0, 0.95);
             border: 1px solid var(--neon);
             padding: 8px 12px;
@@ -128,6 +145,7 @@
             white-space: nowrap;
             opacity: 0;
             transition: opacity 0.2s;
+            transform: translate(10px, 10px);
         }
 
         .state-tooltip.visible {
@@ -272,7 +290,7 @@
                 <div class="absolute top-0 left-0 right-0 z-30 p-12">
                     <div class="flex justify-between items-start animate-in">
                         <div>
-                            <div class="mono text-xs text-gray-500 mb-1">THE GREAT COUNTRY OF THE</div>
+                            <div class="mono text-xs text-gray-500 mb-1">JURISDICTION</div>
                             <h2 class="text-3xl font-bold tracking-tight">UNITED STATES</h2>
                         </div>
                         <div class="status-badge" id="us-badge"><div class="status-dot green"></div> FULL STAFF</div>
@@ -348,7 +366,7 @@
                 <button onclick="toggleStateSelector()" class="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center border border-white/20 hover:bg-white/20 text-white mono">X</button>
                 
                 <div class="p-8 border-b border-white/10">
-                    <h2 class="text-4xl font-bold mb-2">SELECT STATE</h2>
+                    <h2 class="text-4xl font-bold mb-2">SELECT JURISDICTION</h2>
                     <p class="mono text-xs text-gray-500">CLICK A STATE TO VIEW ITS FLAG STATUS</p>
                 </div>
 
@@ -663,8 +681,8 @@
                 });
                 
                 path.addEventListener('mousemove', (e) => {
-                    tooltip.style.left = (e.clientX + 15) + 'px';
-                    tooltip.style.top = (e.clientY + 15) + 'px';
+                    tooltip.style.left = e.clientX + 'px';
+                    tooltip.style.top = e.clientY + 'px';
                 });
                 
                 path.addEventListener('mouseleave', () => {
@@ -800,105 +818,4 @@
             }
         }
 
- function updateStateText(state, effectiveStatus, effectiveReason, effectiveReasonDetail, effectiveDuration) {
-            document.getElementById('state-name').innerText = state.name;
-            document.getElementById('state-code').innerText = state.code;
-            
-            const reasonDisplay = document.getElementById('state-reason-display');
-            const badge = document.getElementById('state-badge');
-            
-            if(effectiveStatus === 'HALF') {
-                badge.className = "status-badge border-red-900/50 bg-red-900/10";
-                badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
-                
-                reasonDisplay.style.display = 'block';
-                document.getElementById('state-reason').textContent = effectiveReason;
-                document.getElementById('state-reason-detail').textContent = effectiveReasonDetail || '';
-                document.getElementById('state-duration').textContent = effectiveDuration;
-            } else {
-                badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
-                badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
-                
-                reasonDisplay.style.display = 'none';
-            }
-
-            document.getElementById('ticker-state-code').innerText = state.code;
-            document.getElementById('ticker-state-code-2').innerText = state.code;
-            document.getElementById('ticker-order').innerText = `Current Order: ${effectiveStatus}`;
-            document.getElementById('ticker-order-2').innerText = `Current Order: ${effectiveStatus}`;
-        }
-
-        function renderStateFlag(state) {
-            const wrapper = document.getElementById('state-flag-wrapper');
-            wrapper.innerHTML = '';
-            
-            const flag = document.createElement('div');
-            flag.className = "flag";
-            const imagePath = `FlagIcons/${state.code}.svg`;
-
-            flag.innerHTML = `
-                <img src="${imagePath}" alt="${state.name}" onerror="this.onerror=null;this.src='FlagIcons/default.svg';">
-                <div class="grommet top"></div><div class="grommet bottom"></div>
-                <div class="absolute inset-0 bg-gradient-to-tr from-black/30 to-transparent"></div>
-            `;
-            wrapper.appendChild(flag);
-        }
-
-        async function initializeApp() {
-            try {
-                console.log('Getting user location...');
-                detectedStateCode = await getUserLocation();
-                console.log('Detected state code:', detectedStateCode);
-
-                const usRes = await fetch(`${API_BASE_URL}/getUSStatus`);
-                const usData = await usRes.json();
-                updateUSVisuals(usData);
-
-                const stateRes = await fetch(`${API_BASE_URL}/getAllStates`);
-                statesData = await stateRes.json();
-                populateStateSelector();
-
-                let initialState;
-                if (detectedStateCode) {
-                    initialState = statesData.find(s => s.code === detectedStateCode);
-                }
-                if (!initialState) {
-                    initialState = statesData.find(s => s.code === 'VA') || statesData[0];
-                }
-                selectState(initialState, true);
-
-                gsap.from(".animate-in", { opacity: 0, y: 20, duration: 1, stagger: 0.1, delay: 0.5 });
-
-            } catch (error) {
-                console.error("Initialization Failed:", error);
-                document.getElementById('main-wrapper').innerHTML = `
-                    <div class="w-full h-full flex items-center justify-center text-red-500 font-bold mono">
-                        SYSTEM ERROR: DB CONNECTION FAILED
-                    </div>
-                `;
-            }
-        }
-
-        function updateTime() {
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('en-US');
-            document.getElementById('ticker-time').textContent = timeStr;
-            document.getElementById('ticker-time-2').textContent = timeStr;
-        }
-
-        function updateTimeDisplay() {
-            if (lastUpdateTime) {
-                document.getElementById('time-display').textContent = lastUpdateTime.toLocaleTimeString('en-US') + " EST";
-            }
-        }
-
-        const centerDivider = document.getElementById('center-divider');
-        const mainWrapper = document.getElementById('main-wrapper');
-        centerDivider.addEventListener('mouseenter', () => mainWrapper.classList.add('center-hover-active'));
-        centerDivider.addEventListener('mouseleave', () => mainWrapper.classList.remove('center-hover-active'));
-
-        setInterval(updateTime, 1000);
-        initializeApp();
-    </script>
-</body>
-</html>
+        function updateStateText(state, effectiveStatus, effectiveReason, effect
