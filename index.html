@@ -241,32 +241,19 @@
             }
         }
 
-.reason-overlay .name-text {
-    font-size: clamp(28px, 4vw, 48px); /* Scales between 28px and 48px based on viewport */
-    font-weight: 900;
-    line-height: 1.05; /* Slightly increased for better multi-line readability */
-    margin-bottom: 10px;
-    color: #ffffff;
-    letter-spacing: -1.5px;
-    word-wrap: break-word; /* Break long words if needed */
-    overflow-wrap: break-word; /* Modern browsers */
-    max-width: 420px; /* Hard limit to prevent reaching the flag */
-}
-
-.reason-overlay .detail-text {
-    font-size: clamp(14px, 1.5vw, 16px); /* Scales between 14px and 16px */
-    color: #aaa;
-    line-height: 1.4; /* Slightly increased */
-    margin-bottom: 12px;
-    font-weight: 400;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    max-width: 420px;
+.reason-overlay {
+    position: absolute;
+    top: 50%;
+    left: 3rem; /* Keep it on the left side */
+    transform: translateY(-50%); /* Keep it vertically centered */
+    max-width: 450px;
+    z-index: 40;
+    pointer-events: none;
 }
 
 .reason-overlay .honor-text {
     font-family: 'Georgia', serif;
-    font-size: clamp(12px, 1.2vw, 14px); /* Scales between 12px and 14px */
+    font-size: clamp(12px, 1.2vw, 14px);
     font-style: italic;
     color: #888;
     letter-spacing: 0.5px;
@@ -274,13 +261,35 @@
     text-transform: lowercase;
 }
 
+.reason-overlay .name-text {
+    font-size: clamp(28px, 4vw, 48px); /* Responsive sizing */
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 10px;
+    color: #ffffff;
+    letter-spacing: -1.5px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 420px; /* Prevents reaching the flag */
+}
+
+.reason-overlay .detail-text {
+    font-size: clamp(14px, 1.5vw, 16px);
+    color: #aaa;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    font-weight: 400;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 420px;
+}
+
 .reason-overlay .duration-text {
-    font-size: clamp(12px, 1.2vw, 14px); /* Scales between 12px and 14px */
+    font-size: clamp(12px, 1.2vw, 14px);
     color: #FF4444;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
-    word-wrap: break-word;
 }
 
         .location-indicator {
