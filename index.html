@@ -623,10 +623,9 @@
                 path.setAttribute('data-state', state.code);
                 if (currentState && currentState.code === state.code) path.classList.add('selected');
                 
-                path.addEventListener('click', () => {
-                    selectState(state);
-                    toggleStateSelector();
-                });
+            path.addEventListener('click', () => {
+                selectState(state);
+            });
                 
                 path.addEventListener('mouseenter', () => {
                     tooltip.querySelector('#tooltip-name').textContent = state.name;
