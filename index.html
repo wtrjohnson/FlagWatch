@@ -17,7 +17,7 @@
     <meta name="twitter:title" content="Flag Watch - Live US Flag Status" />
     <meta name="twitter:description" content="Track real-time half-staff orders for US and state flags. Know when to lower your flag." />
 
-        <!-- iMessage / Apple -->
+    <!-- iMessage / Apple -->
     <meta property="al:ios:url" content="https://flag-watch.vercel.app" />
     <meta property="al:ios:app_name" content="Flag Watch" />
     
@@ -241,62 +241,63 @@
             }
         }
 
-.reason-overlay {
-    position: absolute;
-    top: 50%;
-    left: 3rem; /* Keep it on the left side */
-    transform: translateY(-50%); /* Keep it vertically centered */
-    max-width: 450px;
-    z-index: 40;
-    pointer-events: none;
-}
+        .reason-overlay {
+            position: absolute;
+            top: 50%;
+            left: 3rem;
+            transform: translateY(-50%);
+            max-width: 450px;
+            z-index: 40;
+            pointer-events: none;
+        }
 
-.reason-overlay .honor-text {
-    font-family: 'Azeret Mono', monospace; 
-    font-size: 12px;
-    font-style: normal;
-    color: #888;
-    letter-spacing: 0.1em;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    font-weight: 400;
-}
+        .reason-overlay .honor-text {
+            font-family: 'Azeret Mono', monospace; 
+            font-size: 12px;
+            font-style: normal;
+            color: #888;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 400;
+        }
 
-.reason-overlay .name-text {
-    font-size: clamp(28px, 4vw, 48px); /* Responsive: scales 28px-48px */
-    font-weight: 900;
-    line-height: 1.05;
-    margin-bottom: 10px;
-    color: #ffffff;
-    letter-spacing: -1.5px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    max-width: 420px;
-}
+        .reason-overlay .name-text {
+            font-size: 48px;
+            font-weight: 900;
+            line-height: 1.05;
+            margin-bottom: 10px;
+            color: #ffffff;
+            letter-spacing: -1.5px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            max-width: 420px;
+            white-space: normal;
+        }
 
-.reason-overlay .detail-text {
-    font-family: 'Azeret Mono', monospace; 
-    font-size: clamp(10px, 1.2vw, 12px); /* Responsive: scales 10px-12px */
-    font-style: normal;
-    color: #888;
-    letter-spacing: 0.1em;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-    font-weight: 400;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
+        .reason-overlay .detail-text {
+            font-family: 'Azeret Mono', monospace; 
+            font-size: 12px;
+            font-style: normal;
+            color: #888;
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            font-weight: 400;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
 
-.reason-overlay .duration-text {
-    font-family: 'Azeret Mono', monospace;
-    font-size: clamp(10px, 1.2vw, 12px); /* Responsive: scales 10px-12px */
-    color: #FF4444;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-}
+        .reason-overlay .duration-text {
+            font-family: 'Azeret Mono', monospace;
+            font-size: 12px; 
+            color: #FF4444;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
 
         .location-indicator {
             display: inline-block;
@@ -363,13 +364,12 @@
                 </div>
                 
                 <!-- US Order Message - Left overlay -->
-
-<div class="reason-overlay" id="us-reason-display" style="display: none;">
-    <div class="honor-text">in honor of</div>
-    <div class="name-text" id="us-reason"></div>
-    <div class="detail-text" id="us-reason-detail"></div>
-    <div class="duration-text" id="us-duration"></div>
-</div>
+                <div class="reason-overlay" id="us-reason-display" style="display: none;">
+                    <div class="honor-text">in honor of</div>
+                    <div class="name-text" id="us-reason"></div>
+                    <div class="detail-text" id="us-reason-detail"></div>
+                    <div class="duration-text" id="us-duration"></div>
+                </div>
             </section>
 
 
@@ -404,13 +404,12 @@
                 </div>
                 
                 <!-- State Order Message - Left overlay -->
-<!-- State Order Message - Left overlay -->
-<div class="reason-overlay" id="state-reason-display" style="display: none;">
-    <div class="honor-text">in honor of</div>
-    <div class="name-text" id="state-reason"></div>
-    <div class="detail-text" id="state-reason-detail"></div>
-    <div class="duration-text" id="state-duration"></div>
-</div>
+                <div class="reason-overlay" id="state-reason-display" style="display: none;">
+                    <div class="honor-text">in honor of</div>
+                    <div class="name-text" id="state-reason"></div>
+                    <div class="detail-text" id="state-reason-detail"></div>
+                    <div class="duration-text" id="state-duration"></div>
+                </div>
             </section>
         </main>
 
@@ -481,6 +480,21 @@
         let detectedStateCode = null;
         let lastUpdateTime = null;
         let usStatusGlobal = null;
+
+        // --- CONTENT-AWARE TEXT SIZING ---
+        function adjustTextSize(element, baseSize = 48, minSize = 24, maxWidth = 420) {
+            if (!element || !element.textContent) return;
+            
+            // Start with base size
+            element.style.fontSize = baseSize + 'px';
+            
+            // Keep shrinking until it fits
+            let currentSize = baseSize;
+            while (element.scrollWidth > maxWidth && currentSize > minSize) {
+                currentSize -= 2;
+                element.style.fontSize = currentSize + 'px';
+            }
+        }
 
         // --- GEOLOCATION ---
         const STATE_BOUNDARIES = {
@@ -583,9 +597,15 @@
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
                 reasonDisplay.style.display = 'block';
+                
+                // Set text content
                 document.getElementById('us-reason').textContent = usStatus.reason;
                 document.getElementById('us-reason-detail').textContent = usStatus.reason_detail || '';
                 document.getElementById('us-duration').textContent = usStatus.duration;
+                
+                // Adjust name size dynamically
+                adjustTextSize(document.getElementById('us-reason'), 48, 28, 420);
+                
                 ticker.innerText = "RED";
                 document.getElementById('ticker-national-2').innerText = "RED";
             } else {
@@ -672,9 +692,9 @@
                 path.setAttribute('data-state', state.code);
                 if (currentState && currentState.code === state.code) path.classList.add('selected');
                 
-            path.addEventListener('click', () => {
-                selectState(state);
-            });
+                path.addEventListener('click', () => {
+                    selectState(state);
+                });
                 
                 path.addEventListener('mouseenter', () => {
                     tooltip.querySelector('#tooltip-name').textContent = state.name;
@@ -726,19 +746,19 @@
             if (selector.classList.contains('active')) renderUSMap();
         }
 
-function selectState(state, isInitial = false) {
-    currentState = state;
-    lastUpdateTime = new Date();
-    updateTimeDisplay();
-    
-    const locationBadge = document.getElementById('location-badge');
-    locationBadge.style.display = state.code === detectedStateCode ? 'inline-block' : 'none';
-    
-    // Close the state selector popup if it's open
-    const selector = document.getElementById('state-selector');
-    if (selector.classList.contains('active')) {
-        selector.classList.remove('active');
-    }
+        function selectState(state, isInitial = false) {
+            currentState = state;
+            lastUpdateTime = new Date();
+            updateTimeDisplay();
+            
+            const locationBadge = document.getElementById('location-badge');
+            locationBadge.style.display = state.code === detectedStateCode ? 'inline-block' : 'none';
+            
+            // Close the state selector popup if it's open
+            const selector = document.getElementById('state-selector');
+            if (selector.classList.contains('active')) {
+                selector.classList.remove('active');
+            }
 
             let effectiveStatus = state.status;
             let effectiveReason = state.reason;
@@ -788,9 +808,14 @@ function selectState(state, isInitial = false) {
                 badge.className = "status-badge border-red-900/50 bg-red-900/10";
                 badge.innerHTML = `<div class="status-dot red"></div> HALF STAFF`;
                 reasonDisplay.style.display = 'block';
+                
+                // Set text content
                 document.getElementById('state-reason').textContent = effectiveReason;
                 document.getElementById('state-reason-detail').textContent = effectiveReasonDetail || '';
                 document.getElementById('state-duration').textContent = effectiveDuration;
+                
+                // Adjust name size dynamically
+                adjustTextSize(document.getElementById('state-reason'), 48, 28, 420);
             } else {
                 badge.className = "status-badge border-[#D2FF00]/20 bg-[#D2FF00]/5";
                 badge.innerHTML = `<div class="status-dot green"></div> FULL STAFF`;
@@ -864,3 +889,5 @@ function selectState(state, isInitial = false) {
         setInterval(updateTime, 1000);
         initializeApp();
     </script>
+</body>
+</html>
