@@ -252,17 +252,18 @@
 }
 
 .reason-overlay .honor-text {
-    font-family: 'Georgia', serif;
-    font-size: clamp(12px, 1.2vw, 14px);
-    font-style: italic;
+    font-family: 'Azeret Mono', monospace; /* Match the mono font */
+    font-size: 10px; /* Smaller, tighter */
+    font-style: normal; /* Remove italic */
     color: #888;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.1em; /* Wide letter spacing like "STATE: WA" */
     margin-bottom: 8px;
-    text-transform: lowercase;
+    text-transform: uppercase; /* Already uppercase, but explicit */
+    font-weight: 400;
 }
 
 .reason-overlay .name-text {
-    font-size: clamp(28px, 4vw, 48px); /* Responsive sizing */
+    font-size: clamp(28px, 4vw, 48px);
     font-weight: 900;
     line-height: 1.05;
     margin-bottom: 10px;
@@ -270,7 +271,7 @@
     letter-spacing: -1.5px;
     word-wrap: break-word;
     overflow-wrap: break-word;
-    max-width: 420px; /* Prevents reaching the flag */
+    max-width: 420px;
 }
 
 .reason-overlay .detail-text {
@@ -285,11 +286,12 @@
 }
 
 .reason-overlay .duration-text {
-    font-size: clamp(12px, 1.2vw, 14px);
+    font-family: 'Azeret Mono', monospace; /* Match the mono font */
+    font-size: 10px; /* Match honor-text size */
     color: #FF4444;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.1em; /* Wide letter spacing */
 }
 
         .location-indicator {
