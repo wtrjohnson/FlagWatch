@@ -678,17 +678,19 @@
             if (selector.classList.contains('active')) renderUSMap();
         }
 
-        function selectState(state, isInitial = false) {
-            currentState = state;
-            lastUpdateTime = new Date();
-            updateTimeDisplay();
-            
-            const locationBadge = document.getElementById('location-badge');
-            locationBadge.style.display = state.code === detectedStateCode ? 'inline-block' : 'none';
-            
-            if (document.getElementById('state-selector').classList.contains('active')) {
-                toggleStateSelector();
-            }
+function selectState(state, isInitial = false) {
+    currentState = state;
+    lastUpdateTime = new Date();
+    updateTimeDisplay();
+    
+    const locationBadge = document.getElementById('location-badge');
+    locationBadge.style.display = state.code === detectedStateCode ? 'inline-block' : 'none';
+    
+    // Close the state selector popup if it's open
+    const selector = document.getElementById('state-selector');
+    if (selector.classList.contains('active')) {
+        selector.classList.remove('active');
+    }
 
             let effectiveStatus = state.status;
             let effectiveReason = state.reason;
