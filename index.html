@@ -246,7 +246,7 @@
             top: 50%;
             left: 3rem;
             transform: translateY(-50%);
-            max-width: 450px;
+            max-width: 400px;
             z-index: 40;
             pointer-events: none;
         }
@@ -271,7 +271,7 @@
             letter-spacing: -1.5px;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            max-width: 420px;
+            max-width: 380px;
             white-space: normal;
         }
 
@@ -482,7 +482,7 @@
         let usStatusGlobal = null;
 
         // --- CONTENT-AWARE TEXT SIZING ---
-        function adjustTextSize(element, baseSize = 48, minSize = 24, maxWidth = 420) {
+        function adjustTextSize(element, baseSize = 48, minSize = 24, maxWidth = 380) {
             if (!element || !element.textContent) return;
             
             // Start with base size
