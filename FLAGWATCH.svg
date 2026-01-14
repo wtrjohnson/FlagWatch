@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 204.87 49.42">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #201d1d;
+      }
+
+      .cls-2 {
+        fill: #cdda5a;
+      }
+
+      .cls-3 {
+        fill: #efeff0;
+        font-family: MinionConceptRoman-DisplayBold, 'Minion Variable Concept';
+        font-size: 36.82px;
+        font-variation-settings: 'wght' 700, 'opsz' 36;
+        font-weight: 700;
+      }
+
+      .cls-4 {
+        letter-spacing: -.07em;
+      }
+
+      .cls-5 {
+        letter-spacing: -.05em;
+      }
+
+      .cls-6 {
+        letter-spacing: 0em;
+      }
+
+      .cls-7 {
+        letter-spacing: 0em;
+      }
+
+      .cls-8 {
+        letter-spacing: 0em;
+      }
+
+      .cls-9 {
+        letter-spacing: 0em;
+      }
+    </style>
+  </defs>
+  <rect class="cls-1" width="204.87" height="48.73"/>
+  <path id="top-wave" class="cls-2" d="M6.36,20.01v-6.47c10.59-8.34,25.48,3.86,36.07-4.54v6.75c-1.96,1.65-4.77,2.88-7.33,3.13-9.46.95-19.81-4.69-28.74,1.13Z"/>
+  <path id="middle-wave" class="cls-2" d="M6.36,29.72v-6.47c10.59-8.34,25.48,3.86,36.07-4.54v6.75c-1.96,1.65-4.77,2.88-7.33,3.13-9.46.95-19.81-4.69-28.74,1.13Z"/>
+  <path id="bottom-wave" class="cls-2" d="M6.36,39.73v-6.47c10.59-8.34,25.48,3.86,36.07-4.54v6.75c-1.96,1.65-4.77,2.88-7.33,3.13-9.46.95-19.81-4.69-28.74,1.13Z"/>
+  <text class="cls-3" transform="translate(50.24 35.68)"><tspan class="cls-7" x="0" y="0">F</tspan><tspan class="cls-8" x="19.22" y="0">l</tspan><tspan x="29.09" y="0">a</tspan><tspan class="cls-5" x="44.78" y="0">g</tspan><tspan class="cls-4" x="59.1" y="0">W</tspan><tspan x="89.41" y="0">a</tspan><tspan class="cls-6" x="105.09" y="0">t</tspan><tspan class="cls-9" x="115.44" y="0">c</tspan><tspan x="130.39" y="0">h</tspan></text>
+</svg>
