@@ -36,6 +36,8 @@
             --off-white: #EAEAEA;
             --us-red: #B22234;
             --us-blue: #3C3B6E;
+            --signal-red: #FF2E00;
+            --signal-white: #FFFFFF;
         }
         
         body {
@@ -51,6 +53,55 @@
             position: fixed; inset: 0; pointer-events: none; z-index: 900;
             background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI1MDAiIGhlaWdodD0iNTAwIj48ZmlsdGVyIGlkPSJub2lzZSI+PHZlVHVyYnVsZW5jZSB0eXBlPSJmcmFjdGFsTm9pc2UiIGJhc2VGcmVxdWVuY3k9IjAuNjUiIG51bU9jdGF2ZXM9IjMiIHN0aXRjaFRpbGVzPSJzdGl0Y2giLz48L2ZpbHRlcj48cmVjdCB3aWR0aD0iMTAwJSIgZmlsdGVyPSJ1cmwoI25vaXNlKSIgb3BhY2l0eT0iMC4wNSIvPjwvcmVnPg==');
             opacity: 0.3;
+        }
+
+        /* --- DYNAMIC LOGO STYLES --- */
+        #flag-logo {
+            height: 32px;
+            width: auto;
+        }
+
+        #flag-logo #top-wave {
+            fill: var(--neon);
+            transition: fill 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #flag-logo #middle-wave {
+            fill: var(--neon);
+            transition: fill 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #flag-logo #bottom-wave {
+            fill: var(--neon);
+            transition: fill 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Logo states based on active orders */
+        #flag-logo.national-only #bottom-wave {
+            fill: var(--signal-red);
+        }
+
+        #flag-logo.national-only #middle-wave,
+        #flag-logo.national-only #top-wave {
+            fill: var(--signal-white);
+        }
+
+        #flag-logo.state-only #middle-wave {
+            fill: var(--signal-red);
+        }
+
+        #flag-logo.state-only #bottom-wave,
+        #flag-logo.state-only #top-wave {
+            fill: var(--signal-white);
+        }
+
+        #flag-logo.both-active #bottom-wave,
+        #flag-logo.both-active #middle-wave {
+            fill: var(--signal-red);
+        }
+
+        #flag-logo.both-active #top-wave {
+            fill: var(--signal-white);
         }
 
         /* --- LIGHTING --- */
@@ -318,7 +369,8 @@
 
         <nav class="fixed top-0 w-full z-50 px-6 py-5 flex justify-between items-center border-b border-white/5 bg-black/40 backdrop-blur-md">
             <div class="text-lg font-bold tracking-tighter flex items-center gap-3">
-                <img src="FLAGWATCH.png" alt="Flag Watch Logo" class="h-8 w-auto">
+                <!-- Dynamic SVG Logo -->
+                <img src="FLAGWATCH.svg" alt="Flag Watch" id="flag-logo">
             </div>
             <div class="hidden md:flex gap-6 mono text-[10px] text-gray-400">
                 <span>SYS: ONLINE</span>
@@ -480,6 +532,24 @@
         let detectedStateCode = null;
         let lastUpdateTime = null;
         let usStatusGlobal = null;
+
+        // --- LOGO UPDATE FUNCTION ---
+        function updateLogoState(nationalActive, stateActive) {
+            const logo = document.getElementById('flag-logo');
+            
+            // Remove all state classes
+            logo.classList.remove('national-only', 'state-only', 'both-active');
+            
+            // Apply appropriate state class
+            if (nationalActive && stateActive) {
+                logo.classList.add('both-active');
+            } else if (nationalActive) {
+                logo.classList.add('national-only');
+            } else if (stateActive) {
+                logo.classList.add('state-only');
+            }
+            // If neither is active, logo stays default neon green
+        }
 
         // --- CONTENT-AWARE TEXT SIZING ---
         function adjustTextSize(element, baseSize = 48, minSize = 24, maxWidth = 380) {
