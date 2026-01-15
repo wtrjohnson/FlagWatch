@@ -712,40 +712,122 @@
             'WY': 'M320,200 L440,195 L445,280 L320,275 Z'
         };
 
-        function renderUSMap() {
-            const svg = document.getElementById('us-map');
-            const tooltip = document.getElementById('state-tooltip');
-            svg.innerHTML = '';
-            const usFederalOrder = usStatusGlobal && usStatusGlobal.status === 'HALF';
+async function renderUSMap() {
+    const mapContainer = document.getElementById('us-map');
+    const tooltip = document.getElementById('state-tooltip');
+    
+    try {
+        // Fetch and inject the SVG
+        const response = await fetch('/us-map.svg');
+        const svgText = await response.text();
+        mapContainer.innerHTML = svgText;
+        
+        // Get the actual SVG element
+        const svg = mapContainer.querySelector('svg');
+        if (!svg) {
+            console.error('SVG element not found');
+            return;
+        }
+        
+        // Determine if there's a US federal order
+        const usFederalOrder = usStatusGlobal && usStatusGlobal.status === 'HALF';
+        
+        // Process each state in your data
+        statesData.forEach(state => {
+            // Find the state element(s) - could be a group or individual path
+            const stateElement = svg.querySelector(`#${state.code}`) || 
+                                svg.querySelector(`[id^="${state.code}_"]`)?.parentElement;
             
-            statesData.forEach(state => {
-                if (!STATE_PATHS[state.code]) return;
-                const effectiveStatus = usFederalOrder ? 'HALF' : state.status;
-                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                path.setAttribute('d', STATE_PATHS[state.code]);
-                path.setAttribute('class', `state-path ${effectiveStatus === 'HALF' ? 'half-staff' : 'full-staff'}`);
-                path.setAttribute('data-state', state.code);
-                if (currentState && currentState.code === state.code) path.classList.add('selected');
+            if (!stateElement) {
+                console.warn(`State element not found: ${state.code}`);
+                return;
+            }
+            
+            // Determine effective status
+            const effectiveStatus = usFederalOrder ? 'HALF' : state.status;
+            
+            // Apply classes
+            stateElement.classList.add('state-path');
+            stateElement.classList.add(effectiveStatus === 'HALF' ? 'half-staff' : 'full-staff');
+            
+            // If this is a group (like Hawaii), apply to all children
+            if (stateElement.tagName === 'g') {
+                const children = stateElement.querySelectorAll('path, polygon, rect, circle');
+                children.forEach(child => {
+                    child.classList.add('state-path');
+                    child.classList.add(effectiveStatus === 'HALF' ? 'half-staff' : 'full-staff');
+                });
+            }
+            
+            // Highlight selected state
+            if (currentState && currentState.code === state.code) {
+                stateElement.classList.add('selected');
+            }
+            
+            // Add click handler
+            stateElement.style.cursor = 'pointer';
+            stateElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectState(state);
+            });
+            
+            // Add hover tooltip
+            stateElement.addEventListener('mouseenter', () => {
+                tooltip.querySelector('#tooltip-name').textContent = state.name;
+                tooltip.querySelector('#tooltip-status').textContent = `${effectiveStatus} STAFF`;
+                tooltip.classList.add('visible');
+            });
+            
+            stateElement.addEventListener('mousemove', (e) => {
+                tooltip.style.left = e.clientX + 'px';
+                tooltip.style.top = e.clientY + 'px';
+            });
+            
+            stateElement.addEventListener('mouseleave', () => {
+                tooltip.classList.remove('visible');
+            });
+            
+            // Handle helper selectors (small state callouts on the right)
+            const helperSelector = svg.querySelector(`#${state.code}_helper`) || 
+                                  svg.querySelector(`[id*="${state.code}"][id*="helper"]`);
+            
+            if (helperSelector) {
+                helperSelector.classList.add('helper-selector');
+                helperSelector.classList.add(effectiveStatus === 'HALF' ? 'half-staff' : 'full-staff');
+                helperSelector.style.cursor = 'pointer';
                 
-                path.addEventListener('click', () => {
+                // Same handlers for helper
+                helperSelector.addEventListener('click', (e) => {
+                    e.stopPropagation();
                     selectState(state);
                 });
                 
-                path.addEventListener('mouseenter', () => {
+                helperSelector.addEventListener('mouseenter', () => {
                     tooltip.querySelector('#tooltip-name').textContent = state.name;
                     tooltip.querySelector('#tooltip-status').textContent = `${effectiveStatus} STAFF`;
                     tooltip.classList.add('visible');
+                    // Also highlight the main state
+                    stateElement.classList.add('highlight-temp');
                 });
                 
-                path.addEventListener('mousemove', (e) => {
+                helperSelector.addEventListener('mousemove', (e) => {
                     tooltip.style.left = e.clientX + 'px';
                     tooltip.style.top = e.clientY + 'px';
                 });
                 
-                path.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
-                svg.appendChild(path);
-            });
-        }
+                helperSelector.addEventListener('mouseleave', () => {
+                    tooltip.classList.remove('visible');
+                    stateElement.classList.remove('highlight-temp');
+                });
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error loading SVG map:', error);
+        mapContainer.innerHTML = '<p class="text-red-500">Failed to load map</p>';
+    }
+}
+        
 
         function populateStateSelector() {
             const grid = document.getElementById('state-grid');
