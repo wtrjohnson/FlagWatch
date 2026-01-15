@@ -136,6 +136,42 @@
             50% { stroke-opacity: 0.5; filter: drop-shadow(0 0 20px var(--neon)); }
         }
 
+        /* Helper selector styles (for small states on the right) */
+.helper-selector {
+    transition: all 0.3s ease;
+    opacity: 0.9;
+}
+
+.helper-selector:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    filter: brightness(1.3) drop-shadow(0 0 10px currentColor);
+}
+
+.helper-selector.selected {
+    stroke: var(--neon);
+    stroke-width: 2;
+    animation: pulseHelper 2s ease-in-out infinite;
+}
+
+@keyframes pulseHelper {
+    0%, 100% { 
+        stroke-opacity: 1; 
+        filter: drop-shadow(0 0 6px var(--neon)); 
+    }
+    50% { 
+        stroke-opacity: 0.6; 
+        filter: drop-shadow(0 0 15px var(--neon)); 
+    }
+}
+
+/* Temporary highlight when hovering helper selector */
+.highlight-temp {
+    stroke: var(--neon);
+    stroke-width: 2;
+    filter: brightness(1.3) drop-shadow(0 0 8px var(--neon));
+}
+
         /* Tooltip - Fixed positioning */
         .state-tooltip {
             position: fixed;
@@ -422,30 +458,29 @@
                     <p class="mono text-xs text-gray-500">CLICK A STATE TO VIEW ITS FLAG STATUS</p>
                 </div>
 
-                <!-- Map View (Desktop) -->
-                <div class="map-view flex-grow flex items-center justify-center p-8 relative">
-                    <div class="state-tooltip" id="state-tooltip">
-                        <div class="font-bold" id="tooltip-name"></div>
-                        <div class="text-xs text-gray-400" id="tooltip-status"></div>
-                    </div>
+<!-- Map View (Desktop) -->
+<div class="map-view flex-grow flex items-center justify-center p-8 relative">
+    <div class="state-tooltip" id="state-tooltip">
+        <div class="font-bold" id="tooltip-name"></div>
+        <div class="text-xs text-gray-400" id="tooltip-status"></div>
+    </div>
 
-                    <div class="map-container">
-                        <svg viewBox="0 0 960 600" id="us-map" class="w-full h-auto">
-                            <!-- US Map SVG paths will be injected here -->
-                        </svg>
+    <div class="map-container">
+        <!-- SVG will be injected here -->
+        <div id="us-map" class="w-full h-auto"></div>
 
-                        <div class="map-legend">
-                            <div class="legend-item">
-                                <div class="legend-dot" style="background: var(--neon);"></div>
-                                <span>FULL STAFF</span>
-                            </div>
-                            <div class="legend-item">
-                                <div class="legend-dot" style="background: #FF2E00;"></div>
-                                <span>HALF STAFF</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+        <div class="map-legend">
+            <div class="legend-item">
+                <div class="legend-dot" style="background: var(--neon);"></div>
+                <span>FULL STAFF</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #FF2E00;"></div>
+                <span>HALF STAFF</span>
+            </div>
+        </div>
+    </div>
+</div>
 
                 <!-- List View (Mobile) -->
                 <div class="list-view flex-grow overflow-y-auto p-8 scroller">
