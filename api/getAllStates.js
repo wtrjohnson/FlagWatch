@@ -1,6 +1,29 @@
 // api/getAllStates.js
 import { neon } from "@neondatabase/serverless";
 
+/**
+ * Parse a "Month Day" date string and handle year wraparound.
+ * If the parsed date is more than 6 months in the future, assume it's from last year.
+ */
+function parseMonthDayDate(dateStr, now) {
+  const currentYear = now.getFullYear();
+  const parsed = new Date(`${dateStr} ${currentYear}`);
+
+  if (isNaN(parsed.getTime())) {
+    return null;
+  }
+
+  // If the date is more than 6 months in the future, it's probably from last year
+  const sixMonthsFromNow = new Date(now);
+  sixMonthsFromNow.setMonth(sixMonthsFromNow.getMonth() + 6);
+
+  if (parsed > sixMonthsFromNow) {
+    parsed.setFullYear(currentYear - 1);
+  }
+
+  return parsed;
+}
+
 // Static reference data for all 50 states + DC (Only Code and Name are critical)
 const STATE_LOOKUP = [
     { code: "AL", name: "ALABAMA" }, { code: "AK", name: "ALASKA" }, 
@@ -44,43 +67,37 @@ export default async function handler(req, res) {
     `;
 
     const now = new Date();
-    console.log(`Current time: ${now.toString()} (${now.toISOString()})`);
-    
+
     for (const order of allOrders) {
         try {
             // Check if order has started yet
             if (order.start_date) {
-                const startDate = new Date(`${order.start_date} ${now.getFullYear()}`);
-                startDate.setHours(0, 0, 0, 0); // Start of day
-                
-                if (now < startDate) {
-                    console.log(`State ${order.state_code}: Order hasn't started yet (starts ${order.start_date}), setting to FULL`);
-                    await sql`
-                        UPDATE flag_status
-                        SET half_mast = false, updated_at = NOW()
-                        WHERE id = ${order.id}
-                    `;
-                    continue;
+                const startDate = parseMonthDayDate(order.start_date, now);
+                if (startDate) {
+                    startDate.setHours(0, 0, 0, 0); // Start of day
+
+                    if (now < startDate) {
+                        await sql`
+                            UPDATE flag_status
+                            SET half_mast = false, updated_at = NOW()
+                            WHERE id = ${order.id}
+                        `;
+                        continue;
+                    }
                 }
             }
-            
+
             // Check if order has expired
             if (order.end_date && order.end_date !== '' && order.end_date !== 'TBD') {
-                const dateStr = `${order.end_date} ${now.getFullYear()}`;
-                const endDate = new Date(dateStr);
-                
-                console.log(`State ${order.state_code}: Parsing "${dateStr}"`);
-                
-                if (isNaN(endDate.getTime())) {
-                    console.error(`  -> Invalid date! Skipping.`);
+                const endDate = parseMonthDayDate(order.end_date, now);
+
+                if (!endDate) {
                     continue;
                 }
-                
+
                 endDate.setHours(23, 59, 59, 999);
-                console.log(`  -> Expired? ${endDate < now}`);
-                
+
                 if (endDate < now) {
-                    console.log(`  -> RESETTING to full staff`);
                     await sql`
                         UPDATE flag_status
                         SET half_mast = false, updated_at = NOW()
@@ -89,7 +106,7 @@ export default async function handler(req, res) {
                 }
             }
         } catch (e) {
-            console.error(`ERROR parsing date: ${order.end_date} for state ${order.state_code}:`, e);
+            // Date parsing errors are non-fatal, continue processing other orders
         }
     }
 
@@ -139,7 +156,6 @@ export default async function handler(req, res) {
 
     return res.status(200).json(finalData);
   } catch (err) {
-    console.error("Error in getAllStates function:", err);
     return res.status(500).json({ error: "Failed to fetch state list" });
   }
 }

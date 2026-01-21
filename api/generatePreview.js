@@ -2,6 +2,19 @@
 import { neon } from "@neondatabase/serverless";
 
 /**
+ * Escape special XML/HTML characters to prevent XSS in SVG output
+ */
+function escapeXml(str) {
+  if (!str) return str;
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Generates a dynamic OG image showing current US and state flag status
  * This runs server-side to create the preview image when shared on social media
  */
@@ -20,10 +33,10 @@ export default async function handler(req, res) {
     `;
 
     const usStatus = usResult.length > 0 && usResult[0].half_mast === true ? 'HALF' : 'FULL';
-    const usReason = usResult[0]?.reason || 'Standard Protocols';
+    const usReason = escapeXml(usResult[0]?.reason) || 'Standard Protocols';
 
     // Fetch state status (default to user's location or VA)
-    let stateCode = state || 'VA';
+    let stateCode = escapeXml(state) || 'VA';
     const stateResult = await sql`
       SELECT state_code, reason, reason_detail, half_mast
       FROM flag_status
@@ -32,7 +45,7 @@ export default async function handler(req, res) {
     `;
 
     const stateStatus = stateResult.length > 0 ? 'HALF' : 'FULL';
-    const stateReason = stateResult[0]?.reason || 'No active orders';
+    const stateReason = escapeXml(stateResult[0]?.reason) || 'No active orders';
 
     // Generate SVG (lightweight, scales perfectly, no dependencies needed)
     const svg = `

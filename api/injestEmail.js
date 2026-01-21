@@ -13,14 +13,11 @@ function stripHtml(html) {
 
 /** AI-powered reason extraction using Claude 3 Haiku */
 async function summarizeReason(rawEmailText) {
-  // Check if API key exists
   if (!process.env.ANTHROPIC_API_KEY) {
-    console.log("⚠️  No ANTHROPIC_API_KEY found, falling back to regex extraction");
     return { reason: null, reason_detail: null };
   }
 
   try {
-    console.log("🤖 Calling Claude AI to extract reason...");
     
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
@@ -61,8 +58,6 @@ ${rawEmailText.slice(0, 1500)}`
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("❌ API Error:", response.status, errorText);
       return { reason: null, reason_detail: null };
     }
 
@@ -70,25 +65,21 @@ ${rawEmailText.slice(0, 1500)}`
     
     if (data.content && data.content[0] && data.content[0].text) {
       const summary = data.content[0].text.trim();
-      console.log("✅ AI raw response:", summary);
-      
-      // Clean any markdown formatting
       const cleaned = summary.replace(/```json|```/g, "").trim();
-      const parsed = JSON.parse(cleaned);
-      
-      console.log("✅ AI extracted - reason:", parsed.reason);
-      console.log("✅ AI extracted - reason_detail:", parsed.reason_detail);
-      
-      return {
-        reason: parsed.reason || null,
-        reason_detail: parsed.reason_detail || null
-      };
+
+      try {
+        const parsed = JSON.parse(cleaned);
+        return {
+          reason: parsed.reason || null,
+          reason_detail: parsed.reason_detail || null
+        };
+      } catch (parseError) {
+        return { reason: null, reason_detail: null };
+      }
     }
-    
-    console.log("⚠️  No content in AI response");
+
     return { reason: null, reason_detail: null };
   } catch (error) {
-    console.error("❌ AI summarization failed:", error.message);
     return { reason: null, reason_detail: null };
   }
 }
@@ -110,13 +101,11 @@ function extractReasonFallback(text) {
     const match = text.match(pattern);
     if (match) {
       reason = match[1].trim();
-      console.log("📝 Regex extracted reason:", reason);
       break;
     }
   }
-  
+
   if (!reason) {
-    console.log("⚠️  No reason found with regex");
     reason = "Governor's Order";
   }
   
@@ -186,13 +175,12 @@ function extractDates(text) {
     const month = rangeMatch[1];
     const startDay = rangeMatch[2];
     const endDay = rangeMatch[3];
-    console.log(`📅 Found date range: ${month} ${startDay}-${endDay}`);
     return {
       start: `${month} ${startDay}`,
       end: `${month} ${endDay}`
     };
   }
-  
+
   // Check for "Month Day through Month Day" format
   const throughMatch = text.match(rangePatterns[1]);
   if (throughMatch) {
@@ -200,18 +188,15 @@ function extractDates(text) {
     const startDay = throughMatch[2];
     const endMonth = throughMatch[3];
     const endDay = throughMatch[4];
-    console.log(`📅 Found date range: ${startMonth} ${startDay} through ${endMonth} ${endDay}`);
     return {
       start: `${startMonth} ${startDay}`,
       end: `${endMonth} ${endDay}`
     };
   }
-  
+
   // Fall back to finding individual dates
   const regex = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2}/gi;
   const matches = [...text.matchAll(regex)];
-  
-  console.log(`📅 Found ${matches.length} individual dates`);
 
   return {
     start: matches[0]?.[0] || null,
@@ -221,13 +206,9 @@ function extractDates(text) {
 
 /** MAIN HANDLER */
 export default async function handler(req, res) {
-  console.log("\n=== 📧 INGEST EMAIL START ===");
-  console.log("Timestamp:", new Date().toISOString());
-
   let payload = req.body;
-  
+
   let subject = null;
-  let from = null;
   let html = null;
   let plain = null;
 
@@ -235,69 +216,49 @@ export default async function handler(req, res) {
   if (payload && typeof payload === "object" && payload.headers) {
     // CloudMailin JSON format
     subject = payload.headers.subject || null;
-    from = payload.headers.from || null;
     html = payload.html || null;
     plain = payload.plain || null;
   } else if (typeof payload === "string") {
     // Multipart/form-data format
     const params = new URLSearchParams(payload);
     subject = params.get("headers[subject]") || params.get("subject");
-    from = params.get("headers[from]");
     html = params.get("html");
     plain = params.get("plain");
   } else {
     // Direct properties
     subject = payload?.subject || null;
-    from = payload?.from || null;
     html = payload?.html || null;
     plain = payload?.plain || null;
   }
 
-  console.log("📬 Subject:", subject);
-  console.log("👤 From:", from);
-
   if (!subject) {
-    console.log("⚠️  Could not extract subject → ignoring email");
     return res.status(200).send("ignored");
   }
 
   const emailText = html ? stripHtml(html) : (plain || "");
-  console.log("📄 Email text length:", emailText.length, "characters");
-  console.log("📄 Preview:", emailText.slice(0, 200), "...");
 
   const isNational = detectNational(subject);
   const stateCode = isNational ? null : detectState(subject);
 
-  console.log("🇺🇸 National order:", isNational);
-  console.log("🏛️  State detected:", stateCode || "None");
-
   if (!isNational && !stateCode) {
-    console.log("⚠️  No state detected → ignoring email");
     return res.status(200).send("ignored");
   }
 
   // Extract reason with AI (with fallback)
   let reasonData = await summarizeReason(emailText);
   if (!reasonData.reason) {
-    console.log("⚠️  AI failed, using regex fallback");
     reasonData = extractReasonFallback(emailText);
   }
-  
+
   const reason = reasonData.reason;
   const reasonDetail = reasonData.reason_detail;
-  
-  console.log("📝 Final reason:", reason);
-  console.log("📝 Final reason_detail:", reasonDetail);
 
   const { start, end } = extractDates(emailText);
-  console.log("📅 Start date:", start);
-  console.log("📅 End date:", end);
 
   const sql = neon(process.env.DATABASE_URL);
 
   try {
     if (isNational) {
-      console.log("💾 Inserting NATIONAL flag order...");
       await sql`
         INSERT INTO flag_status (country_code, state_code, half_mast, reason, reason_detail, start_date, end_date, raw_email)
         VALUES ('US', NULL, true, ${reason}, ${reasonDetail}, ${start}, ${end}, ${emailText})
@@ -312,7 +273,6 @@ export default async function handler(req, res) {
           updated_at = NOW();
       `;
     } else {
-      console.log(`💾 Inserting STATE flag order for ${stateCode}...`);
       await sql`
         INSERT INTO flag_status (country_code, state_code, half_mast, reason, reason_detail, start_date, end_date, raw_email)
         VALUES ('US', ${stateCode.toUpperCase()}, true, ${reason}, ${reasonDetail}, ${start}, ${end}, ${emailText})
@@ -328,11 +288,8 @@ export default async function handler(req, res) {
       `;
     }
 
-    console.log("✅ Database updated successfully");
-    console.log("=== 📧 INGEST EMAIL COMPLETE ===\n");
     return res.status(200).send("ok");
   } catch (dbError) {
-    console.error("❌ Database error:", dbError);
     return res.status(500).json({ error: "Database update failed" });
   }
 }
